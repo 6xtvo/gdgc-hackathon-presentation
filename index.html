@@ -1,674 +1,1547 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GRIDDOWN — Emergency Coordination System</title>
+  <title>GRIDDOWN</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
   <style>
-    @keyframes fadeUp    { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
-    @keyframes slideLeft { from{opacity:0;transform:translateX(-32px)} to{opacity:1;transform:translateX(0)} }
-    @keyframes slideRight{ from{opacity:0;transform:translateX(32px)}  to{opacity:1;transform:translateX(0)} }
-    @keyframes scaleIn   { from{opacity:0;transform:scale(0.85)}       to{opacity:1;transform:scale(1)} }
-    @keyframes expandBar { from{width:0} to{width:var(--progress,0%)} }
-    @keyframes expandH   { from{transform:scaleX(0)} to{transform:scaleX(1)} }
-    @keyframes expandV   { from{transform:scaleY(0)} to{transform:scaleY(1)} }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-    @keyframes glitch {
-      0%,100%{clip-path:inset(0 0 0 0);transform:none;opacity:0}
-      4% {clip-path:inset(10% 0 75% 0);transform:translateX(-5px);opacity:0.6}
-      8% {clip-path:inset(55% 0 20% 0);transform:translateX(5px);opacity:0.6}
-      12%{clip-path:inset(30% 0 50% 0);transform:translateX(-3px);opacity:0.6}
-      16%{clip-path:inset(70% 0 8%  0);transform:translateX(3px);opacity:0.6}
-      20%{clip-path:inset(0 0 0 0);transform:none;opacity:0}
+    html,
+    body {
+      background: #000;
+      color: #fff;
+      font-family: "Share Tech Mono", monospace;
+      height: 100%;
+      overflow: hidden
     }
-    @keyframes glitch2 {
-      0%,100%{clip-path:inset(0 0 0 0);transform:none;opacity:0}
-      4% {clip-path:inset(60% 0 15% 0);transform:translateX(6px);opacity:0.3}
-      8% {clip-path:inset(20% 0 65% 0);transform:translateX(-4px);opacity:0.3}
-      12%{clip-path:inset(45% 0 35% 0);transform:translateX(2px);opacity:0.3}
-      20%{clip-path:inset(0 0 0 0);transform:none;opacity:0}
+
+    a {
+      text-decoration: none;
+      color: white;
     }
+
+    #c {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      display: block;
+      width: 100%;
+      height: 100%
+    }
+
+    .scanline {
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.04) 2px, rgba(0, 0, 0, 0.04) 4px);
+      pointer-events: none;
+      z-index: 50
+    }
+
+    .sweep {
+      position: fixed;
+      left: 0;
+      right: 0;
+      height: 140px;
+      top: -140px;
+      background: linear-gradient(to bottom, transparent, rgba(220, 38, 38, 0.04), transparent);
+      pointer-events: none;
+      z-index: 49;
+      animation: sweep 7s linear infinite
+    }
+
+    @keyframes sweep {
+      from {
+        top: -140px
+      }
+
+      to {
+        top: 110vh
+      }
+    }
+
+    .flash {
+      position: fixed;
+      inset: 0;
+      background: #dc2626;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0
+    }
+
+    .flash.go {
+      animation: flashout 0.4s ease forwards
+    }
+
+    @keyframes flashout {
+      0% {
+        opacity: 0.25
+      }
+
+      100% {
+        opacity: 0
+      }
+    }
+
+    /* HUD */
+    #hud {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column
+    }
+
+    .hud-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 36px;
+      border-bottom: 2px solid #dc2626;
+      background: rgba(0, 0, 0, 0.88);
+      pointer-events: all;
+      backdrop-filter: blur(6px);
+      flex-shrink: 0
+    }
+
+    .logo {
+      font-size: 30px;
+      color: #dc2626;
+      letter-spacing: 6px;
+      animation: flicker 10s ease infinite
+    }
+
+    .logo span {
+      color: #fff
+    }
+
     @keyframes flicker {
-      0%,88%,90%,92%,94%,100%{opacity:1}
-      89%{opacity:0.2}
-      91%{opacity:0.7}
-      93%{opacity:0.4}
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-    @keyframes scan  { from{top:-150px} to{top:110vh} }
-    @keyframes rgbShift {
-      0%,100%{text-shadow:0 0 0 #dc2626}
-      25%{text-shadow:-2px 0 0 #ff0000, 2px 0 0 #dc2626}
-      75%{text-shadow:2px 0 0 #ff0000,-2px 0 0 #dc2626}
-    }
-    @keyframes borderPulse {
-      0%,100%{border-color:#dc2626;box-shadow:0 0 0 0 rgba(220,38,38,0)}
-      50%{border-color:#ff2222;box-shadow:0 0 18px 3px rgba(220,38,38,0.22)}
-    }
-    @keyframes redGlow {
-      0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}
-      50%{box-shadow:0 0 24px 4px rgba(220,38,38,0.18)}
-    }
-    @keyframes flashOut { 0%{opacity:0.25} 100%{opacity:0} }
-    @keyframes typewriter {
-      from{width:0;border-right:2px solid #dc2626}
-      to  {width:100%;border-right:2px solid transparent}
-    }
-    @keyframes countUp0 { from{opacity:0;transform:translateY(16px) scale(0.7)} to{opacity:1;transform:translateY(0) scale(1)} }
-    @keyframes orbit {
-      from{transform:rotate(0deg) translateX(28px) rotate(0deg)}
-      to  {transform:rotate(360deg) translateX(28px) rotate(-360deg)}
-    }
-    @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-    @keyframes dataStream {
-      0%  {opacity:0;transform:translateY(-20px)}
-      10% {opacity:1;transform:translateY(0)}
-      90% {opacity:1;transform:translateY(0)}
-      100%{opacity:0;transform:translateY(20px)}
-    }
-    @keyframes cornerBlink {
-      0%,100%{opacity:1} 50%{opacity:0.2}
-    }
-    @keyframes slideBarLeft  { from{transform:scaleX(0);transform-origin:left}  to{transform:scaleX(1);transform-origin:left} }
-    @keyframes slideBarRight { from{transform:scaleX(0);transform-origin:right} to{transform:scaleX(1);transform-origin:right} }
-    @keyframes cardReveal {
-      from{opacity:0;transform:translateY(20px) scale(0.96);filter:blur(4px)}
-      to  {opacity:1;transform:translateY(0)    scale(1);   filter:blur(0)}
-    }
-    @keyframes iconPop {
-      0%  {transform:scale(1)}
-      40% {transform:scale(1.35) rotate(-5deg)}
-      60% {transform:scale(0.9)  rotate(3deg)}
-      100%{transform:scale(1)}
-    }
-    @keyframes flowArrow {
-      0%,100%{transform:translateX(0);opacity:1}
-      50%    {transform:translateX(5px);opacity:0.4}
-    }
-    @keyframes techPillIn {
-      from{opacity:0;transform:scale(0.7) rotate(-4deg)}
-      to  {opacity:1;transform:scale(1)   rotate(0deg)}
-    }
-    @keyframes avatarSpin {
-      0%  {transform:rotate(0deg);border-color:#dc2626}
-      25% {border-color:#ff4444}
-      50% {transform:rotate(180deg);border-color:#dc2626}
-      75% {border-color:#ff4444}
-      100%{transform:rotate(360deg);border-color:#dc2626}
-    }
-    @keyframes statNumCount {
-      from{transform:translateY(30px);opacity:0}
-      to  {transform:translateY(0);opacity:1}
-    }
-    @keyframes warningBlink {
-      0%,100%{background:rgba(220,38,38,0.06)}
-      50%    {background:rgba(220,38,38,0.14)}
-    }
-    @keyframes logoGlitch {
-      0%,95%,100%{transform:none;filter:none}
-      96%{transform:translateX(-3px);filter:hue-rotate(90deg)}
-      97%{transform:translateX(3px);filter:hue-rotate(-90deg)}
-      98%{transform:skewX(-5deg);filter:none}
-      99%{transform:none;filter:none}
-    }
-    @keyframes bigTextIn {
-      from{opacity:0;transform:scale(1.3) translateY(-20px);filter:blur(8px)}
-      to  {opacity:1;transform:scale(1)   translateY(0);    filter:blur(0)}
-    }
-    @keyframes ctaPulse {
-      0%,100%{border-color:#dc2626;box-shadow:0 0 0 0 rgba(220,38,38,0)}
-      50%    {border-color:#ff4444;box-shadow:0 0 40px 8px rgba(220,38,38,0.3)}
-    }
-    @keyframes cornerIn {
-      from{width:0;height:0}
-      to  {width:16px;height:16px}
+
+      0%,
+      88%,
+      90%,
+      92%,
+      94%,
+      100% {
+        opacity: 1
+      }
+
+      89% {
+        opacity: 0.15
+      }
+
+      91% {
+        opacity: 0.7
+      }
+
+      93% {
+        opacity: 0.35
+      }
     }
 
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html,body{background:#000;color:#fff;font-family:'Share Tech Mono',monospace;height:100%;overflow:hidden}
-
-    .scanline{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 4px);pointer-events:none;z-index:9990}
-    .sweep{position:fixed;left:0;right:0;height:150px;top:-150px;background:linear-gradient(to bottom,transparent,rgba(220,38,38,0.06),transparent);pointer-events:none;z-index:9989;animation:scan 6s linear infinite}
-    .flash{position:fixed;inset:0;background:#dc2626;pointer-events:none;z-index:9999;opacity:0}
-    .flash.go{animation:flashOut 0.4s ease forwards}
-
-    /* Corner decorations */
-    .corner{position:absolute;width:16px;height:16px;pointer-events:none}
-    .corner.tl{top:0;left:0;border-top:2px solid #dc2626;border-left:2px solid #dc2626}
-    .corner.tr{top:0;right:0;border-top:2px solid #dc2626;border-right:2px solid #dc2626}
-    .corner.bl{bottom:0;left:0;border-bottom:2px solid #dc2626;border-left:2px solid #dc2626}
-    .corner.br{bottom:0;right:0;border-bottom:2px solid #dc2626;border-right:2px solid #dc2626}
-
-    .pres{display:flex;flex-direction:column;height:100vh;width:100vw;background:#000}
-    .slide{display:none;flex:1;flex-direction:column;min-height:0}
-    .slide.active{display:flex}
-
-    .nav-bar{
-      display:flex;align-items:center;justify-content:space-between;
-      border-bottom:2px solid #dc2626;padding:14px 48px;flex-shrink:0;
-      position:relative;
-    }
-    .slide.active .nav-bar{animation:fadeIn 0.3s ease both}
-
-    .logo{font-size:34px;color:#dc2626;letter-spacing:6px;animation:flicker 10s ease infinite,logoGlitch 12s ease infinite}
-    .logo span{color:#fff}
-    .slide-counter{font-size:12px;color:#dc2626;letter-spacing:3px}
-
-    /* Animated data ticker in nav */
-    .ticker{font-size:10px;color:#3f3f46;letter-spacing:2px;overflow:hidden;flex:1;white-space:nowrap;margin:0 30rem}
-    .ticker span{display:inline-block;animation:tickerScroll 12s linear infinite}
-    @keyframes tickerScroll{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
-
-    .signal-bar{height:2px;flex-shrink:0;background:#1a1a1a;position:relative;overflow:hidden}
-    .signal-bar::after{content:'';position:absolute;top:0;left:0;height:100%;background:linear-gradient(90deg,#7f1d1d,#dc2626,#ff4444);width:0}
-    .slide.active .signal-bar::after{animation:expandBar 1s cubic-bezier(0.4,0,0.2,1) 0.1s forwards;width:var(--progress,0%)}
-
-    .slide-body{flex:1;padding:40px 80px;display:flex;flex-direction:column;justify-content:center;min-height:0;overflow:hidden}
-
-    .tag{font-size:11px;color:#dc2626;letter-spacing:4px;margin-bottom:12px;border-left:3px solid #dc2626;padding-left:12px;position:relative}
-    .slide.active .tag{animation:slideLeft 0.45s ease 0.05s both}
-
-    .slide-title{font-size:clamp(28px,4.5vw,54px);letter-spacing:4px;line-height:1.15;margin-bottom:8px;position:relative}
-    .slide.active .slide-title{animation:fadeUp 0.55s cubic-bezier(0.16,1,0.3,1) 0.15s both}
-    .slide-title .accent{color:#dc2626;position:relative}
-    .slide-title .accent::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:1px;background:#dc2626;transform:scaleX(0);transform-origin:left;animation:none}
-    .slide.active .slide-title .accent::after{animation:slideBarLeft 0.6s ease 0.7s forwards}
-
-    /* Glitch layers on title slide */
-    #slide-0.active .slide-title::before{
-      content:attr(data-glitch);position:absolute;top:0;left:-2px;
-      color:#ff0000;animation:glitch 7s steps(1) 2s infinite;opacity:0;pointer-events:none
-    }
-    #slide-0.active .slide-title::after{
-      content:attr(data-glitch);position:absolute;top:0;left:2px;
-      color:#dc2626;animation:glitch2 7s steps(1) 2.2s infinite;opacity:0;pointer-events:none
+    .ticker-wrap {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap
     }
 
-    .slide-sub{font-size:13px;color:#52525b;letter-spacing:3px;margin-bottom:28px;overflow:hidden;white-space:nowrap;position:relative}
-    .slide.active .slide-sub{animation:fadeUp 0.5s ease 0.28s both}
-    .slide-sub::after{content:'█';animation:blink 0.9s step-end infinite;color:#dc2626;margin-left:4px}
-
-    /* === SLIDE 1: STATS === */
-    .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
-    .stat-box{border:1px solid #27272a;padding:22px 18px;position:relative;overflow:hidden;transition:transform 0.3s,border-color 0.3s}
-    .stat-box::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;transition:width 0.3s}
-    .stat-box::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(220,38,38,0.03),transparent);opacity:0;transition:opacity 0.3s}
-    .stat-box:hover{transform:translateY(-4px) scale(1.02)}
-    .stat-box.red:hover{border-color:#dc2626;box-shadow:0 8px 24px rgba(220,38,38,0.2)}
-    .stat-box.amber:hover{border-color:#d97706;box-shadow:0 8px 24px rgba(217,119,6,0.2)}
-    .stat-box.green:hover{border-color:#16a34a;box-shadow:0 8px 24px rgba(22,163,74,0.2)}
-    .stat-box:hover::after{opacity:1}
-    .stat-box.red::before{background:#dc2626}
-    .stat-box.amber::before{background:#d97706}
-    .stat-box.green::before{background:#16a34a}
-    .stat-box:hover::before{width:100%;opacity:0.06}
-    .stat-box.red{animation:borderPulse 2.5s ease infinite}
-    .stat-num{font-size:clamp(26px,3.5vw,46px);margin-bottom:4px;animation:countUp0 0.6s cubic-bezier(0.34,1.56,0.64,1) both}
-    .stat-box.red   .stat-num{color:#dc2626;text-shadow:0 0 20px rgba(220,38,38,0.4)}
-    .stat-box.amber .stat-num{color:#d97706;text-shadow:0 0 20px rgba(217,119,6,0.3)}
-    .stat-box.green .stat-num{color:#16a34a;text-shadow:0 0 20px rgba(22,163,74,0.3)}
-    .stat-label{font-size:11px;color:#52525b;letter-spacing:3px}
-    .slide.active .stat-box:nth-child(1){animation:cardReveal 0.5s ease 0.32s both,borderPulse 2.5s ease 1s infinite}
-    .slide.active .stat-box:nth-child(2){animation:cardReveal 0.5s ease 0.46s both}
-    .slide.active .stat-box:nth-child(3){animation:cardReveal 0.5s ease 0.60s both}
-    .slide.active .stat-box:nth-child(1) .stat-num{animation:countUp0 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.5s both}
-    .slide.active .stat-box:nth-child(2) .stat-num{animation:countUp0 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.65s both}
-    .slide.active .stat-box:nth-child(3) .stat-num{animation:countUp0 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.80s both}
-
-    /* === SLIDE 2: PROBLEMS === */
-    .problem-list{list-style:none;display:flex;flex-direction:column;gap:10px}
-    .problem-item{
-      display:flex;align-items:flex-start;gap:14px;padding:13px 18px;
-      border:1px solid #27272a;border-left:3px solid #dc2626;position:relative;
-      overflow:hidden;transition:border-color 0.3s,transform 0.3s,background 0.3s;cursor:default
-    }
-    .problem-item::before{
-      content:'';position:absolute;inset:0;
-      background:linear-gradient(90deg,rgba(220,38,38,0.06),transparent);
-      transform:translateX(-100%);transition:transform 0.4s ease
-    }
-    .problem-item:hover{border-color:#ef4444;transform:translateX(6px)}
-    .problem-item:hover::before{transform:translateX(0)}
-    .problem-icon{font-size:20px;flex-shrink:0;margin-top:1px;transition:transform 0.3s}
-    .problem-item:hover .problem-icon{animation:iconPop 0.5s ease forwards}
-    .problem-text{font-size:13px;line-height:1.6;color:#d4d4d8;letter-spacing:1px}
-    .problem-text strong{color:#fff}
-    .slide.active .problem-item:nth-child(1){animation:slideLeft 0.45s cubic-bezier(0.16,1,0.3,1) 0.28s both}
-    .slide.active .problem-item:nth-child(2){animation:slideLeft 0.45s cubic-bezier(0.16,1,0.3,1) 0.40s both}
-    .slide.active .problem-item:nth-child(3){animation:slideLeft 0.45s cubic-bezier(0.16,1,0.3,1) 0.52s both}
-    .slide.active .problem-item:nth-child(4){animation:slideLeft 0.45s cubic-bezier(0.16,1,0.3,1) 0.64s both}
-
-    /* === SLIDE 3: FLOW === */
-    .flow-row{display:flex;align-items:center;gap:6px;margin-top:22px}
-    .flow-step{
-      border:1px solid #dc2626;padding:13px 6px;font-size:10px;letter-spacing:2px;
-      color:#fff;flex:1;text-align:center;line-height:1.6;position:relative;overflow:hidden;
-      transition:background 0.3s,transform 0.3s,box-shadow 0.3s;cursor:default
-    }
-    .flow-step::before{content:'';position:absolute;inset:0;background:rgba(220,38,38,0.08);transform:scaleY(0);transform-origin:bottom;transition:transform 0.3s}
-    .flow-step:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(220,38,38,0.2)}
-    .flow-step:hover::before{transform:scaleY(1)}
-    .flow-step span{color:#71717a;font-size:9px;display:block;margin-top:4px}
-    .flow-arrow{color:#dc2626;font-size:18px;flex-shrink:0;animation:flowArrow 1.5s ease infinite}
-    .flow-arrow:nth-child(4){animation-delay:0.3s}
-    .flow-arrow:nth-child(6){animation-delay:0.6s}
-    .flow-arrow:nth-child(8){animation-delay:0.9s}
-    .slide.active .flow-step:nth-child(1){animation:cardReveal 0.4s ease 0.30s both}
-    .slide.active .flow-step:nth-child(3){animation:cardReveal 0.4s ease 0.42s both}
-    .slide.active .flow-step:nth-child(5){animation:cardReveal 0.4s ease 0.54s both}
-    .slide.active .flow-step:nth-child(7){animation:cardReveal 0.4s ease 0.66s both}
-    .slide.active .flow-step:nth-child(9){animation:cardReveal 0.4s ease 0.78s both}
-    .slide.active .flow-arrow{animation:fadeIn 0.3s ease 0.55s both,flowArrow 1.5s ease 1s infinite}
-
-    /* === SLIDE 4: FEATURES === */
-    .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
-    .feature-card{
-      border:1px solid #27272a;padding:20px 18px;position:relative;overflow:hidden;
-      transition:border-color 0.3s,transform 0.3s,box-shadow 0.3s;cursor:default
-    }
-    .feature-card::before{
-      content:'';position:absolute;inset:0;
-      background:radial-gradient(circle at 50% 0%,rgba(220,38,38,0.1),transparent 70%);
-      opacity:0;transition:opacity 0.3s
-    }
-    .feature-card::after{
-      content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
-      background:linear-gradient(90deg,transparent,#dc2626,transparent);
-      transform:scaleX(0);transition:transform 0.4s ease
-    }
-    .feature-card:hover{border-color:#dc2626;transform:translateY(-5px) scale(1.01);box-shadow:0 12px 32px rgba(220,38,38,0.15)}
-    .feature-card:hover::before{opacity:1}
-    .feature-card:hover::after{transform:scaleX(1)}
-    .feature-card:hover .feature-icon{animation:iconPop 0.5s ease forwards;color:#ff4444;text-shadow:0 0 16px rgba(220,38,38,0.6)}
-    .feature-icon{font-size:26px;color:#dc2626;margin-bottom:10px;transition:color 0.3s,text-shadow 0.3s}
-    .feature-name{font-size:12px;letter-spacing:3px;margin-bottom:6px;color:#fff}
-    .feature-desc{font-size:11px;color:#71717a;letter-spacing:1px;line-height:1.6}
-    .slide.active .feature-card:nth-child(1){animation:cardReveal 0.5s cubic-bezier(0.16,1,0.3,1) 0.28s both}
-    .slide.active .feature-card:nth-child(2){animation:cardReveal 0.5s cubic-bezier(0.16,1,0.3,1) 0.40s both}
-    .slide.active .feature-card:nth-child(3){animation:cardReveal 0.5s cubic-bezier(0.16,1,0.3,1) 0.52s both}
-    .slide.active .feature-card:nth-child(4){animation:cardReveal 0.5s cubic-bezier(0.16,1,0.3,1) 0.64s both}
-
-    /* Corner accents on feature cards */
-    .feature-card .corner{animation:cornerIn 0.3s ease forwards;animation-play-state:paused}
-    .feature-card:hover .corner{animation-play-state:running}
-
-    /* === SLIDE 5: TECH === */
-    .tech-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px}
-    .tech-pill{
-      border:1px solid #3f3f46;padding:13px 8px;text-align:center;
-      font-size:11px;letter-spacing:2px;color:#d4d4d8;position:relative;overflow:hidden;
-      transition:border-color 0.3s,color 0.3s,transform 0.3s,box-shadow 0.3s
-    }
-    .tech-pill::before{
-      content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
-      background:linear-gradient(90deg,transparent,rgba(220,38,38,0.1),transparent);
-      transition:left 0.4s ease
-    }
-    .tech-pill:hover{border-color:#dc2626;color:#fff;transform:translateY(-3px) scale(1.04);box-shadow:0 6px 20px rgba(220,38,38,0.15)}
-    .tech-pill:hover::before{left:100%}
-    .tech-role{font-size:9px;color:#dc2626;letter-spacing:1px;margin-top:5px}
-    .slide.active .tech-pill:nth-child(1){animation:techPillIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.28s both}
-    .slide.active .tech-pill:nth-child(2){animation:techPillIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.35s both}
-    .slide.active .tech-pill:nth-child(3){animation:techPillIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.42s both}
-    .slide.active .tech-pill:nth-child(4){animation:techPillIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.49s both}
-    .slide.active .tech-pill:nth-child(5){animation:techPillIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.56s both}
-    .slide.active .tech-pill:nth-child(6){animation:techPillIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.63s both}
-    .slide.active .tech-pill:nth-child(7){animation:techPillIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.70s both}
-    .slide.active .tech-pill:nth-child(8){animation:techPillIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.77s both}
-
-    /* === SLIDE 6: TEAM === */
-    .team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
-    .team-card{
-      border:1px solid #27272a;padding:28px 18px;text-align:center;position:relative;overflow:hidden;
-      transition:border-color 0.3s,transform 0.3s,box-shadow 0.3s
-    }
-    .team-card::before{
-      content:'';position:absolute;bottom:0;left:0;right:0;height:0;
-      background:linear-gradient(to top,rgba(220,38,38,0.08),transparent);
-      transition:height 0.4s ease
-    }
-    .team-card:hover{border-color:#dc2626;transform:translateY(-6px);box-shadow:0 16px 40px rgba(220,38,38,0.18)}
-    .team-card:hover::before{height:100%}
-    .team-avatar{
-      width:54px;height:54px;border:2px solid #dc2626;border-radius:50%;
-      display:flex;align-items:center;justify-content:center;
-      font-size:20px;color:#dc2626;margin:0 auto 12px;
-      transition:background 0.3s,color 0.3s;position:relative
-    }
-    .team-card:hover .team-avatar{background:rgba(220,38,38,0.12);color:#ff4444;animation:avatarSpin 1.5s ease forwards}
-    .team-name{font-size:13px;letter-spacing:3px;color:#fff;margin-bottom:5px}
-    .team-role{font-size:10px;color:#52525b;letter-spacing:2px;transition:color 0.3s}
-    .team-card:hover .team-role{color:#dc2626}
-    .slide.active .team-card:nth-child(1){animation:cardReveal 0.5s cubic-bezier(0.16,1,0.3,1) 0.30s both}
-    .slide.active .team-card:nth-child(2){animation:cardReveal 0.5s cubic-bezier(0.16,1,0.3,1) 0.46s both}
-    .slide.active .team-card:nth-child(3){animation:cardReveal 0.5s cubic-bezier(0.16,1,0.3,1) 0.62s both}
-
-    /* Deploy box */
-    .deploy-box{margin-top:20px;border:1px solid #27272a;padding:16px 22px;border-left:3px solid #16a34a;transition:border-color 0.3s,transform 0.3s}
-    .deploy-box:hover{border-color:#22c55e;transform:translateX(4px)}
-    .deploy-label{font-size:10px;color:#16a34a;letter-spacing:3px;margin-bottom:6px}
-    .deploy-text{font-size:12px;color:#d4d4d8;letter-spacing:1px;line-height:1.6}
-    .slide.active .deploy-box{animation:fadeUp 0.4s ease 0.58s both}
-
-    /* === SLIDE 7: FINALE === */
-    .big-stat{
-      font-size:clamp(46px,7vw,78px);color:#dc2626;letter-spacing:6px;margin-bottom:6px;
-      position:relative;text-shadow:0 0 40px rgba(220,38,38,0.3)
-    }
-    .big-stat::before{
-      content:attr(data-glitch);position:absolute;top:0;left:-3px;
-      color:#ff0000;animation:glitch 5s steps(1) 1s infinite;opacity:0;pointer-events:none
-    }
-    .slide.active .big-stat{animation:bigTextIn 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both}
-
-    .cta-box{
-      border:2px solid #dc2626;padding:32px 48px;text-align:center;
-      margin-top:24px;position:relative;transition:transform 0.3s
-    }
-    a {text-decoration: none; color: white;}
-    .cta-box::before{content:'// SYSTEM ONLINE';position:absolute;top:-11px;left:24px;font-size:10px;background:#000;padding:0 10px;color:#dc2626;letter-spacing:3px}
-    .cta-box:hover{transform:scale(1.01)}
-    .cta-title{font-size:26px;letter-spacing:6px;margin-bottom:8px;text-decoration: none;}
-    .cta-sub{font-size:12px;color:#52525b;letter-spacing:3px}
-    #slide-6.active .cta-box{animation:fadeUp 0.5s ease 0.45s both,ctaPulse 2s ease 1.5s infinite}
-    #slide-6.active .big-stat::before{animation:glitch 4s steps(1) 1.5s infinite}
-
-    /* Nav */
-    .nav-controls{display:flex;align-items:center;justify-content:center;gap:14px;padding:14px;border-top:1px solid #1f1f1f;flex-shrink:0}
-    .nav-btn{
-      background:transparent;border:1px solid #3f3f46;color:#fff;
-      font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;
-      padding:9px 24px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden
-    }
-    .nav-btn::before{content:'';position:absolute;inset:0;background:rgba(220,38,38,0.08);transform:scaleX(0);transform-origin:left;transition:transform 0.3s}
-    .nav-btn:hover:not(:disabled){border-color:#dc2626;color:#dc2626}
-    .nav-btn:hover:not(:disabled)::before{transform:scaleX(1)}
-    .nav-btn:active:not(:disabled){transform:scale(0.97)}
-    .nav-btn:disabled{opacity:0.2;cursor:not-allowed}
-
-    .dot-row{display:flex;gap:7px;align-items:center}
-    .dot{width:6px;height:6px;border-radius:50%;background:#3f3f46;cursor:pointer;transition:background 0.2s,transform 0.2s,box-shadow 0.2s}
-    .dot:hover{transform:scale(1.5);background:#dc2626}
-    .dot.active{background:#dc2626;box-shadow:0 0 8px rgba(220,38,38,0.5)}
-
-    .hint{position:fixed;bottom:68px;right:20px;font-size:9px;color:#2a2a2a;letter-spacing:2px;pointer-events:none}
-
-    /* Animated grid background */
-    .grid-bg{
-      position:fixed;inset:0;pointer-events:none;z-index:0;
-      background-image:linear-gradient(rgba(220,38,38,0.03) 1px,transparent 1px),
-                       linear-gradient(90deg,rgba(220,38,38,0.03) 1px,transparent 1px);
-      background-size:48px 48px;
-      mask-image:radial-gradient(ellipse at center,rgba(0,0,0,0.6) 0%,transparent 70%);
+    .ticker {
+      display: inline-block;
+      font-size: 10px;
+      color: #3f3f46;
+      letter-spacing: 2px;
+      animation: tickscroll 16s linear infinite
     }
 
-    .slide-body{position:relative;z-index:1}
-    .nav-bar{position:relative;z-index:1}
+    @keyframes tickscroll {
+      from {
+        transform: translateX(60vw)
+      }
+
+      to {
+        transform: translateX(-100%)
+      }
+    }
+
+    .counter {
+      font-size: 11px;
+      color: #dc2626;
+      letter-spacing: 3px;
+      flex-shrink: 0
+    }
+
+    .hud-bot {
+      margin-top: auto;
+      padding: 12px 36px;
+      border-top: 1px solid #1a1a1a;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      pointer-events: all;
+      flex-shrink: 0
+    }
+
+    .nbtn {
+      background: transparent;
+      border: 1px solid #3f3f46;
+      color: #fff;
+      font-family: "Share Tech Mono", monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      padding: 8px 20px;
+      cursor: pointer;
+      transition: all 0.2s
+    }
+
+    .nbtn:hover:not(:disabled) {
+      border-color: #dc2626;
+      color: #dc2626
+    }
+
+    .nbtn:disabled {
+      opacity: 0.2;
+      cursor: not-allowed
+    }
+
+    .dots {
+      display: flex;
+      gap: 6px;
+      align-items: center
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #3f3f46;
+      cursor: pointer;
+      transition: all 0.2s
+    }
+
+    .dot:hover {
+      transform: scale(1.5)
+    }
+
+    .dot.on {
+      background: #dc2626;
+      box-shadow: 0 0 8px rgba(220, 38, 38, 0.7)
+    }
+
+    /* Node tooltip */
+    #tip {
+      position: fixed;
+      background: rgba(0, 0, 0, 0.92);
+      border: 1px solid #dc2626;
+      padding: 5px 10px;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: #dc2626;
+      pointer-events: none;
+      z-index: 60;
+      opacity: 0;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+      transform: translate(10px, -50%)
+    }
+
+    /* Slide panel */
+    #panel {
+      position: fixed;
+      z-index: 40;
+      background: rgba(2, 2, 2, 0.97);
+      border: 1.5px solid #dc2626;
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      pointer-events: none;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    #panel.open {
+      pointer-events: all
+    }
+
+    /* Content hidden during expand, shown only after ready */
+    #sc {
+      opacity: 0;
+      transition: opacity 0.25s ease
+    }
+
+    #sc.visible {
+      opacity: 1
+    }
+
+    .sbar {
+      height: 2px;
+      flex-shrink: 0;
+      background: #111;
+      position: relative;
+      overflow: hidden
+    }
+
+    .sbar::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: linear-gradient(90deg, #7f1d1d, #dc2626, #ff4444);
+      width: 0;
+      transition: width 1.1s cubic-bezier(0.4, 0, 0.2, 1) 0.4s
+    }
+
+    .sbar.on::after {
+      width: var(--p, 0%)
+    }
+
+    .scontent {
+      flex: 1;
+      padding: 32px 52px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+      min-height: 0
+    }
+
+    /* Content styles */
+    @keyframes fadeup {
+      from {
+        opacity: 0;
+        transform: translateY(18px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes slideleft {
+      from {
+        opacity: 0;
+        transform: translateX(-26px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    @keyframes reveal {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.96);
+        filter: blur(3px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0)
+      }
+    }
+
+    @keyframes popin {
+      from {
+        opacity: 0;
+        transform: scale(0.65) rotate(-5deg)
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) rotate(0)
+      }
+    }
+
+    @keyframes bigtext {
+      from {
+        opacity: 0;
+        transform: scale(1.25) translateY(-16px);
+        filter: blur(6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: blur(0)
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0)
+      }
+
+      50% {
+        border-color: #ff3333;
+        box-shadow: 0 0 18px 3px rgba(220, 38, 38, 0.22)
+      }
+    }
+
+    @keyframes ctapulse {
+
+      0%,
+      100% {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0)
+      }
+
+      50% {
+        border-color: #ff4444;
+        box-shadow: 0 0 40px 8px rgba(220, 38, 38, 0.3)
+      }
+    }
+
+    @keyframes iconpop {
+      0% {
+        transform: scale(1)
+      }
+
+      40% {
+        transform: scale(1.4) rotate(-6deg)
+      }
+
+      60% {
+        transform: scale(0.9) rotate(3deg)
+      }
+
+      100% {
+        transform: scale(1)
+      }
+    }
+
+    @keyframes arrowpulse {
+
+      0%,
+      100% {
+        transform: translateX(0);
+        opacity: 1
+      }
+
+      50% {
+        transform: translateX(4px);
+        opacity: 0.4
+      }
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0
+      }
+    }
+
+    .tag {
+      font-size: 11px;
+      color: #dc2626;
+      letter-spacing: 4px;
+      margin-bottom: 10px;
+      border-left: 3px solid #dc2626;
+      padding-left: 10px
+    }
+
+    .stitle {
+      font-size: clamp(24px, 3.8vw, 48px);
+      letter-spacing: 4px;
+      line-height: 1.15;
+      margin-bottom: 7px;
+      position: relative
+    }
+
+    .stitle .acc {
+      color: #dc2626;
+      position: relative
+    }
+
+    .stitle .acc::after {
+      content: "";
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #dc2626;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.6s ease 0.7s
+    }
+
+    .ssub {
+      font-size: 11px;
+      color: #52525b;
+      letter-spacing: 3px;
+      margin-bottom: 20px
+    }
+
+    .ssub::after {
+      content: "█";
+      animation: blink 0.9s step-end infinite;
+      color: #dc2626;
+      margin-left: 3px
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 11px;
+      margin-top: 14px
+    }
+
+    .stat-box {
+      border: 1px solid #27272a;
+      padding: 18px 14px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+      cursor: default
+    }
+
+    .stat-box::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%
+    }
+
+    .stat-box.r::before {
+      background: #dc2626
+    }
+
+    .stat-box.a::before {
+      background: #d97706
+    }
+
+    .stat-box.g::before {
+      background: #16a34a
+    }
+
+    .stat-box.r {
+      animation: pulse 2.5s ease infinite
+    }
+
+    .stat-box.r:hover {
+      transform: translateY(-4px);
+      border-color: #dc2626;
+      box-shadow: 0 8px 22px rgba(220, 38, 38, 0.22)
+    }
+
+    .stat-box.a:hover {
+      transform: translateY(-4px);
+      border-color: #d97706;
+      box-shadow: 0 8px 22px rgba(217, 119, 6, 0.2)
+    }
+
+    .stat-box.g:hover {
+      transform: translateY(-4px);
+      border-color: #16a34a;
+      box-shadow: 0 8px 22px rgba(22, 163, 74, 0.2)
+    }
+
+    .snum {
+      font-size: clamp(22px, 2.8vw, 42px);
+      margin-bottom: 4px
+    }
+
+    .stat-box.r .snum {
+      color: #dc2626;
+      text-shadow: 0 0 16px rgba(220, 38, 38, 0.5)
+    }
+
+    .stat-box.a .snum {
+      color: #d97706;
+      text-shadow: 0 0 16px rgba(217, 119, 6, 0.35)
+    }
+
+    .stat-box.g .snum {
+      color: #16a34a;
+      text-shadow: 0 0 16px rgba(22, 163, 74, 0.35)
+    }
+
+    .slbl {
+      font-size: 10px;
+      color: #52525b;
+      letter-spacing: 3px
+    }
+
+    .plist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px
+    }
+
+    .pitem {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 11px 15px;
+      border: 1px solid #27272a;
+      border-left: 3px solid #dc2626;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s, border-color 0.3s;
+      cursor: default
+    }
+
+    .pitem::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(220, 38, 38, 0.07), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.4s
+    }
+
+    .pitem:hover {
+      transform: translateX(5px);
+      border-color: #ef4444
+    }
+
+    .pitem:hover::before {
+      transform: translateX(0)
+    }
+
+    .picon {
+      font-size: 18px;
+      flex-shrink: 0;
+      transition: transform 0.3s
+    }
+
+    .pitem:hover .picon {
+      animation: iconpop 0.5s ease forwards
+    }
+
+    .ptxt {
+      font-size: 12px;
+      line-height: 1.6;
+      color: #d4d4d8;
+      letter-spacing: 1px
+    }
+
+    .ptxt strong {
+      color: #fff
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 18px
+    }
+
+    .fstep {
+      border: 1px solid #dc2626;
+      padding: 11px 5px;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: #fff;
+      flex: 1;
+      text-align: center;
+      line-height: 1.6;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: default
+    }
+
+    .fstep::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(220, 38, 38, 0.09);
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform 0.3s
+    }
+
+    .fstep:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 18px rgba(220, 38, 38, 0.2)
+    }
+
+    .fstep:hover::before {
+      transform: scaleY(1)
+    }
+
+    .fstep span {
+      color: #71717a;
+      font-size: 8px;
+      display: block;
+      margin-top: 3px
+    }
+
+    .farr {
+      color: #dc2626;
+      font-size: 15px;
+      flex-shrink: 0;
+      animation: arrowpulse 1.5s ease infinite
+    }
+
+    .fgrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 11px;
+      margin-top: 10px
+    }
+
+    .fcard {
+      border: 1px solid #27272a;
+      padding: 17px 15px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+      cursor: default
+    }
+
+    .fcard::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(220, 38, 38, 0.1), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s
+    }
+
+    .fcard::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #dc2626, transparent);
+      transform: scaleX(0);
+      transition: transform 0.4s
+    }
+
+    .fcard:hover {
+      border-color: #dc2626;
+      transform: translateY(-4px);
+      box-shadow: 0 10px 26px rgba(220, 38, 38, 0.15)
+    }
+
+    .fcard:hover::before {
+      opacity: 1
+    }
+
+    .fcard:hover::after {
+      transform: scaleX(1)
+    }
+
+    .fcard:hover .ficon {
+      animation: iconpop 0.5s ease forwards;
+      color: #ff4444;
+      text-shadow: 0 0 14px rgba(220, 38, 38, 0.6)
+    }
+
+    .ficon {
+      font-size: 22px;
+      color: #dc2626;
+      margin-bottom: 8px;
+      transition: color 0.3s, text-shadow 0.3s
+    }
+
+    .fname {
+      font-size: 10px;
+      letter-spacing: 3px;
+      margin-bottom: 4px;
+      color: #fff
+    }
+
+    .fdesc {
+      font-size: 10px;
+      color: #71717a;
+      letter-spacing: 1px;
+      line-height: 1.6
+    }
+
+    .trow {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 16px
+    }
+
+    .tpill {
+      border: 1px solid #3f3f46;
+      padding: 11px 6px;
+      text-align: center;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: #d4d4d8;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, color 0.3s, transform 0.3s, box-shadow 0.3s;
+      cursor: default
+    }
+
+    .tpill::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(220, 38, 38, 0.12), transparent);
+      transition: left 0.4s
+    }
+
+    .tpill:hover {
+      border-color: #dc2626;
+      color: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 5px 16px rgba(220, 38, 38, 0.15)
+    }
+
+    .tpill:hover::before {
+      left: 100%
+    }
+
+    .trole {
+      font-size: 8px;
+      color: #dc2626;
+      letter-spacing: 1px;
+      margin-top: 4px
+    }
+
+    .tgrid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 11px;
+      margin-top: 16px
+    }
+
+    .tcard {
+      border: 1px solid #27272a;
+      padding: 24px 14px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+      cursor: default
+    }
+
+    .tcard::before {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 0;
+      background: linear-gradient(to top, rgba(220, 38, 38, 0.08), transparent);
+      transition: height 0.4s
+    }
+
+    .tcard:hover {
+      border-color: #dc2626;
+      transform: translateY(-5px);
+      box-shadow: 0 12px 32px rgba(220, 38, 38, 0.18)
+    }
+
+    .tcard:hover::before {
+      height: 100%
+    }
+
+    .tavatar {
+      width: 48px;
+      height: 48px;
+      border: 2px solid #dc2626;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #dc2626;
+      margin: 0 auto 10px;
+      transition: background 0.3s, color 0.3s
+    }
+
+    .tcard:hover .tavatar {
+      background: rgba(220, 38, 38, 0.12);
+      color: #ff4444
+    }
+
+    .tname {
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: #fff;
+      margin-bottom: 4px
+    }
+
+    .trole2 {
+      font-size: 9px;
+      color: #52525b;
+      letter-spacing: 2px;
+      transition: color 0.3s
+    }
+
+    .tcard:hover .trole2 {
+      color: #dc2626
+    }
+
+    .dbox {
+      margin-top: 16px;
+      border: 1px solid #27272a;
+      padding: 13px 18px;
+      border-left: 3px solid #16a34a;
+      transition: border-color 0.3s, transform 0.3s;
+      cursor: default
+    }
+
+    .dbox:hover {
+      border-color: #22c55e;
+      transform: translateX(3px)
+    }
+
+    .dlbl {
+      font-size: 9px;
+      color: #16a34a;
+      letter-spacing: 3px;
+      margin-bottom: 4px
+    }
+
+    .dtxt {
+      font-size: 11px;
+      color: #d4d4d8;
+      letter-spacing: 1px;
+      line-height: 1.6
+    }
+
+    .bigstat {
+      font-size: clamp(40px, 5.5vw, 70px);
+      color: #dc2626;
+      letter-spacing: 6px;
+      margin-bottom: 5px;
+      text-shadow: 0 0 36px rgba(220, 38, 38, 0.4)
+    }
+
+    .ctabox {
+      border: 2px solid #dc2626;
+      padding: 26px 40px;
+      text-align: center;
+      margin-top: 18px;
+      position: relative
+    }
+
+    .ctabox::before {
+      content: "// SYSTEM ONLINE";
+      position: absolute;
+      top: -10px;
+      left: 18px;
+      font-size: 9px;
+      background: #020202;
+      padding: 0 8px;
+      color: #dc2626;
+      letter-spacing: 3px
+    }
+
+    .ctatitle {
+      font-size: 22px;
+      letter-spacing: 6px;
+      margin-bottom: 6px
+    }
+
+    .ctasub {
+      font-size: 10px;
+      color: #52525b;
+      letter-spacing: 3px
+    }
+
+    /* Panel enter animations */
+    #panel.anim .tag {
+      animation: slideleft 0.4s ease 0.05s both
+    }
+
+    #panel.anim .stitle {
+      animation: fadeup 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both
+    }
+
+    #panel.anim .ssub {
+      animation: fadeup 0.5s ease 0.25s both
+    }
+
+    #panel.anim .stat-box:nth-child(1) {
+      animation: reveal 0.45s ease 0.32s both
+    }
+
+    #panel.anim .stat-box:nth-child(2) {
+      animation: reveal 0.45s ease 0.44s both
+    }
+
+    #panel.anim .stat-box:nth-child(3) {
+      animation: reveal 0.45s ease 0.56s both
+    }
+
+    #panel.anim .pitem:nth-child(1) {
+      animation: slideleft 0.4s ease 0.28s both
+    }
+
+    #panel.anim .pitem:nth-child(2) {
+      animation: slideleft 0.4s ease 0.40s both
+    }
+
+    #panel.anim .pitem:nth-child(3) {
+      animation: slideleft 0.4s ease 0.52s both
+    }
+
+    #panel.anim .pitem:nth-child(4) {
+      animation: slideleft 0.4s ease 0.64s both
+    }
+
+    #panel.anim .fstep:nth-child(1) {
+      animation: reveal 0.35s ease 0.30s both
+    }
+
+    #panel.anim .fstep:nth-child(3) {
+      animation: reveal 0.35s ease 0.42s both
+    }
+
+    #panel.anim .fstep:nth-child(5) {
+      animation: reveal 0.35s ease 0.54s both
+    }
+
+    #panel.anim .fstep:nth-child(7) {
+      animation: reveal 0.35s ease 0.66s both
+    }
+
+    #panel.anim .fstep:nth-child(9) {
+      animation: reveal 0.35s ease 0.78s both
+    }
+
+    #panel.anim .fcard:nth-child(1) {
+      animation: reveal 0.45s ease 0.28s both
+    }
+
+    #panel.anim .fcard:nth-child(2) {
+      animation: reveal 0.45s ease 0.40s both
+    }
+
+    #panel.anim .fcard:nth-child(3) {
+      animation: reveal 0.45s ease 0.52s both
+    }
+
+    #panel.anim .fcard:nth-child(4) {
+      animation: reveal 0.45s ease 0.64s both
+    }
+
+    #panel.anim .tpill:nth-child(1) {
+      animation: popin 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s both
+    }
+
+    #panel.anim .tpill:nth-child(2) {
+      animation: popin 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s both
+    }
+
+    #panel.anim .tpill:nth-child(3) {
+      animation: popin 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.42s both
+    }
+
+    #panel.anim .tpill:nth-child(4) {
+      animation: popin 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.49s both
+    }
+
+    #panel.anim .tpill:nth-child(5) {
+      animation: popin 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.56s both
+    }
+
+    #panel.anim .tpill:nth-child(6) {
+      animation: popin 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.63s both
+    }
+
+    #panel.anim .tpill:nth-child(7) {
+      animation: popin 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.70s both
+    }
+
+    #panel.anim .tpill:nth-child(8) {
+      animation: popin 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) 0.77s both
+    }
+
+    #panel.anim .tcard:nth-child(1) {
+      animation: reveal 0.45s ease 0.30s both
+    }
+
+    #panel.anim .tcard:nth-child(2) {
+      animation: reveal 0.45s ease 0.46s both
+    }
+
+    #panel.anim .tcard:nth-child(3) {
+      animation: reveal 0.45s ease 0.62s both
+    }
+
+    #panel.anim .bigstat {
+      animation: bigtext 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both
+    }
+
+    #panel.anim .ctabox {
+      animation: fadeup 0.5s ease 0.4s both, ctapulse 2s ease 1.5s infinite
+    }
+
+    #panel.anim .dbox {
+      animation: fadeup 0.4s ease 0.55s both
+    }
+
+    .hint {
+      position: fixed;
+      bottom: 62px;
+      right: 18px;
+      font-size: 9px;
+      color: #222;
+      letter-spacing: 2px;
+      pointer-events: none;
+      z-index: 55
+    }
   </style>
 </head>
+
 <body>
+  <canvas id="c"></canvas>
+  <div class="scanline"></div>
+  <div class="sweep"></div>
+  <div class="flash" id="flash"></div>
+  <div id="tip"></div>
 
-<div class="grid-bg"></div>
-<div class="scanline"></div>
-<div class="sweep"></div>
-<div class="flash" id="flash"></div>
-
-<div class="pres">
-
-  <!-- SLIDE 1 -->
-  <div class="slide active" id="slide-0">
-    <div class="nav-bar">
+  <div id="hud">
+    <div class="hud-top">
       <div class="logo">GRID<span>DOWN</span></div>
-      <div class="ticker"><span>SIGNAL ACQUIRED // ENCRYPTION ACTIVE // MESH ONLINE // PEERS CONNECTING //</span></div>
-      <div class="slide-counter">01 / 07</div>
-    </div>
-    <div class="signal-bar" style="--progress:14%"></div>
-    <div class="slide-body">
-      <div class="tag">EMERGENCY COORDINATION SYSTEM</div>
-      <div class="slide-title" data-glitch="WHEN THE GRID GOES DARK">WHEN THE <span class="accent">GRID</span><br>GOES DARK</div>
-      <div class="slide-sub">// P2P MESH NETWORK FOR COMMUNITY SURVIVAL</div>
-      <div class="stat-row">
-        <div class="stat-box red">
-          <div class="stat-num">28H</div><div class="stat-label">CRITICAL WINDOW</div>
-        </div>
-        <div class="stat-box amber">
-          <div class="stat-num">0</div><div class="stat-label">CENTRAL SERVERS</div>
-        </div>
-        <div class="stat-box green">
-          <div class="stat-num">∞</div><div class="stat-label">PEER CONNECTIONS</div>
-        </div>
+      <div class="ticker-wrap">
+        <div class="ticker" id="ticker">SIGNAL ACQUIRED // ENCRYPTION ACTIVE // MESH ONLINE // PEERS CONNECTING //
+          NODES: 247 //</div>
       </div>
+      <div class="counter" id="counter">01 / 07</div>
+    </div>
+    <div class="hud-bot">
+      <button class="nbtn" id="pb" disabled onclick="go(cur-1)">← PREV</button>
+      <div class="dots" id="dots"></div>
+      <button class="nbtn" id="nb" onclick="go(cur+1)">NEXT →</button>
     </div>
   </div>
 
-  <!-- SLIDE 2 -->
-  <div class="slide" id="slide-1">
-    <div class="nav-bar">
-      <div class="logo">GRID<span>DOWN</span></div>
-      <div class="ticker"><span>THREAT LEVEL: CRITICAL // ALL NETWORKS DOWN // INITIATING PROTOCOL //</span></div>
-      <div class="slide-counter">02 / 07</div>
-    </div>
-    <div class="signal-bar" style="--progress:28%"></div>
-    <div class="slide-body">
-      <div class="tag">THREAT ASSESSMENT</div>
-      <div class="slide-title">THE <span class="accent">PROBLEM</span></div>
-      <div class="slide-sub">// SOLAR FLARE — ALL SYSTEMS OFFLINE</div>
-      <ul class="problem-list">
-        <li class="problem-item">
-          <i class="ti ti-id-off problem-icon" style="color:#dc2626" aria-hidden="true"></i>
-          <div class="problem-text"><strong>IDENTITY WITHOUT RECORDS</strong> — databases wiped, no proof of who you are</div>
-        </li>
-        <li class="problem-item">
-          <i class="ti ti-shield-off problem-icon" style="color:#d97706" aria-hidden="true"></i>
-          <div class="problem-text"><strong>TRUST WITHOUT AUTHORITY</strong> — no institutions to verify credentials</div>
-        </li>
-        <li class="problem-item">
-          <i class="ti ti-world-off problem-icon" style="color:#dc2626" aria-hidden="true"></i>
-          <div class="problem-text"><strong>COORDINATION WITHOUT INFRASTRUCTURE</strong> — who needs help, who can help?</div>
-        </li>
-        <li class="problem-item">
-          <i class="ti ti-clock-off problem-icon" style="color:#d97706" aria-hidden="true"></i>
-          <div class="problem-text"><strong>28 HOURS</strong> — the critical window before communities collapse without coordination</div>
-        </li>
-      </ul>
-    </div>
+  <div id="panel">
+    <div class="sbar" id="sbar"></div>
+    <div class="scontent" id="sc"></div>
   </div>
 
-  <!-- SLIDE 3 -->
-  <div class="slide" id="slide-2">
-    <div class="nav-bar">
-      <div class="logo">GRID<span>DOWN</span></div>
-      <div class="ticker"><span>MESH TOPOLOGY ACTIVE // ROUTING PACKETS // NODES: 247 // LATENCY: 12MS //</span></div>
-      <div class="slide-counter">03 / 07</div>
-    </div>
-    <div class="signal-bar" style="--progress:42%"></div>
-    <div class="slide-body">
-      <div class="tag">SOLUTION OVERVIEW</div>
-      <div class="slide-title">HOW <span class="accent">GRIDDOWN</span><br>WORKS</div>
-      <div class="slide-sub">// NO INTERNET. NO SERVERS. JUST PEOPLE.</div>
-      <div class="flow-row">
-        <div class="flow-step">JOIN MESH<span>HOTSPOT / LAN</span></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">ANNOUNCE<span>SKILLS + ZONE</span></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">POST TASK<span>NEED / OFFER</span></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">P2P CHAT<span>DIRECT LINK</span></div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">ATTEST<span>BUILD TRUST</span></div>
-      </div>
-      <div class="deploy-box">
-        <div class="deploy-label">DEPLOYMENT MODEL</div>
-        <div class="deploy-text">One laptop + WiFi hotspot = community coordination hub. Anyone can run the tower. Zero cloud dependency. Works entirely on local network.</div>
-      </div>
-    </div>
-  </div>
+  <div class="hint">F=FULLSCREEN · ←→ NAV · ESC=CLOSE · CLICK NODES</div>
 
-  <!-- SLIDE 4 -->
-  <div class="slide" id="slide-3">
-    <div class="nav-bar">
-      <div class="logo">GRID<span>DOWN</span></div>
-      <div class="ticker"><span>MODULES LOADED // BROADCAST READY // TRUST ENGINE: ONLINE //</span></div>
-      <div class="slide-counter">04 / 07</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/lines/LineSegmentsGeometry.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/lines/LineMaterial.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/lines/LineSegments2.js"></script>
+  <script>
+    // ─── SLIDES ─────────────────────────────────────────────────────────────────
+    const SLIDES = [
+      {
+        p: '14%', t: 'SIGNAL ACQUIRED // ENCRYPTION ACTIVE // MESH ONLINE // PEERS CONNECTING //',
+        h: `<div class="tag">EMERGENCY COORDINATION SYSTEM</div>
+    <div class="stitle">WHEN THE <span class="acc">GRID</span><br>GOES DARK</div>
+    <div class="ssub">// P2P MESH NETWORK FOR COMMUNITY SURVIVAL</div>
+    <div class="stat-row">
+      <div class="stat-box r"><div class="snum">72H</div><div class="slbl">CRITICAL WINDOW</div></div>
+      <div class="stat-box a"><div class="snum">0</div><div class="slbl">CENTRAL SERVERS</div></div>
+      <div class="stat-box g"><div class="snum">∞</div><div class="slbl">PEER CONNECTIONS</div></div>
+    </div>`},
+      {
+        p: '42%', t: 'MESH TOPOLOGY ACTIVE // ROUTING PACKETS // NODES: 247 // LATENCY: 12MS //',
+        h: `<div class="tag">SOLUTION OVERVIEW</div>
+    <div class="stitle">HOW <span class="acc">GRIDDOWN</span> WORKS</div>
+    <div class="ssub">// NO INTERNET. NO SERVERS. JUST PEOPLE.</div>
+    <div class="flow">
+      <div class="fstep">JOIN MESH<span>HOTSPOT/LAN</span></div><div class="farr">→</div>
+      <div class="fstep">ANNOUNCE<span>SKILLS+ZONE</span></div><div class="farr">→</div>
+      <div class="fstep">POST TASK<span>NEED/OFFER</span></div><div class="farr">→</div>
+      <div class="fstep">P2P CHAT<span>DIRECT LINK</span></div><div class="farr">→</div>
+      <div class="fstep">ATTEST<span>BUILD TRUST</span></div>
     </div>
-    <div class="signal-bar" style="--progress:57%"></div>
-    <div class="slide-body">
-      <div class="tag">FEATURE SET</div>
-      <div class="slide-title">KEY <span class="accent">MODULES</span></div>
-      <div class="feature-grid">
-        <div class="feature-card">
-          <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-          <i class="ti ti-radio feature-icon" aria-hidden="true"></i>
-          <div class="feature-name">BROADCAST ALERTS</div>
-          <div class="feature-desc">Blast urgent messages to all peers simultaneously. No server needed. Red / amber / green urgency levels.</div>
-        </div>
-        <div class="feature-card">
-          <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-          <i class="ti ti-list-check feature-icon" aria-hidden="true"></i>
-          <div class="feature-name">URGENCY BOARD</div>
-          <div class="feature-desc">Live feed of needs and offers from all connected peers. Claim a task to open a direct P2P chat.</div>
-        </div>
-        <div class="feature-card">
-          <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-          <i class="ti ti-users feature-icon" aria-hidden="true"></i>
-          <div class="feature-name">SKILL DISCOVERY</div>
-          <div class="feature-desc">Search connected peers by skill. Medical, engineering, farming, mechanics and more.</div>
-        </div>
-        <div class="feature-card">
-          <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-          <i class="ti ti-certificate feature-icon" aria-hidden="true"></i>
-          <div class="feature-name">TRUST ATTESTATION</div>
-          <div class="feature-desc">After completing a task, peers mutually sign off. Identity emerges from interactions — not records.</div>
-        </div>
-      </div>
+    <div class="dbox"><div class="dlbl">DEPLOYMENT MODEL</div><div class="dtxt">One laptop + WiFi hotspot = community hub. Anyone runs the tower. Zero cloud dependency.</div></div>`},
+      {
+        p: '57%', t: 'MODULES LOADED // BROADCAST READY // TRUST ENGINE: ONLINE //',
+        h: `<div class="tag">FEATURE SET</div>
+    <div class="stitle">KEY <span class="acc">MODULES</span></div>
+    <div class="fgrid">
+      <div class="fcard"><i class="ti ti-radio ficon"></i><div class="fname">BROADCAST ALERTS</div><div class="fdesc">Blast urgent messages to all peers. Red / amber / green urgency levels.</div></div>
+      <div class="fcard"><i class="ti ti-list-check ficon"></i><div class="fname">URGENCY BOARD</div><div class="fdesc">Live feed of needs and offers. Claim a task to open a direct P2P chat.</div></div>
+      <div class="fcard"><i class="ti ti-users ficon"></i><div class="fname">SKILL DISCOVERY</div><div class="fdesc">Search connected peers by skill — medical, engineering, farming and more.</div></div>
+      <div class="fcard"><i class="ti ti-certificate ficon"></i><div class="fname">TRUST ATTESTATION</div><div class="fdesc">Peers sign off on tasks. Identity emerges from interactions, not records.</div></div>
+    </div>`},
+      {
+        p: '71%', t: 'STACK VERIFIED // BUILD: PASSING // TYPES: SAFE // DEPLOY: READY //',
+        h: `<div class="tag">ARCHITECTURE</div>
+    <div class="stitle">TECH <span class="acc">STACK</span></div>
+    <div class="ssub">// SERVERLESS BY DESIGN</div>
+    <div class="trow">
+      <div class="tpill">NEXT.JS 15<div class="trole">FRAMEWORK</div></div>
+      <div class="tpill">TRPC v11<div class="trole">API LAYER</div></div>
+      <div class="tpill">WEBRTC<div class="trole">P2P MESH</div></div>
+      <div class="tpill">TAILWIND 4<div class="trole">STYLING</div></div>
+      <div class="tpill">TYPESCRIPT<div class="trole">LANGUAGE</div></div>
+      <div class="tpill">ZOD<div class="trole">VALIDATION</div></div>
+      <div class="tpill">REACT 19<div class="trole">UI</div></div>
+      <div class="tpill">INDEXEDDB<div class="trole">LOCAL STORE</div></div>
     </div>
-  </div>
-
-  <!-- SLIDE 5 -->
-  <div class="slide" id="slide-4">
-    <div class="nav-bar">
-      <div class="logo">GRID<span>DOWN</span></div>
-      <div class="ticker"><span>STACK VERIFIED // BUILD: PASSING // TYPES: SAFE // DEPLOY: READY //</span></div>
-      <div class="slide-counter">05 / 07</div>
-    </div>
-    <div class="signal-bar" style="--progress:71%"></div>
-    <div class="slide-body">
-      <div class="tag">ARCHITECTURE</div>
-      <div class="slide-title">TECH <span class="accent">STACK</span></div>
-      <div class="slide-sub">// SERVERLESS BY DESIGN</div>
-      <div class="tech-row">
-        <div class="tech-pill">NEXT.JS 15<div class="tech-role">FRAMEWORK</div></div>
-        <div class="tech-pill">TRPC v11<div class="tech-role">API LAYER</div></div>
-        <div class="tech-pill">WEBRTC<div class="tech-role">P2P MESH</div></div>
-        <div class="tech-pill">TAILWIND 4<div class="tech-role">STYLING</div></div>
-        <div class="tech-pill">TYPESCRIPT<div class="tech-role">LANGUAGE</div></div>
-        <div class="tech-pill">ZOD<div class="tech-role">VALIDATION</div></div>
-        <div class="tech-pill">REACT 19<div class="tech-role">UI</div></div>
-        <div class="tech-pill">INDEXEDDB<div class="tech-role">LOCAL STORE</div></div>
-      </div>
-      <div class="deploy-box">
-        <div class="deploy-label">WHY THIS STACK</div>
-        <div class="deploy-text">End-to-end typesafe. Zero cloud dependency. WebRTC for direct peer connections. IndexedDB for local persistence when peers go offline.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SLIDE 6 -->
-  <div class="slide" id="slide-5">
-    <div class="nav-bar">
-      <div class="logo">GRID<span>DOWN</span></div>
-      <div class="ticker"><span>TEAM ASSEMBLED // CLEARANCE: GRANTED // MISSION: ACTIVE //</span></div>
-      <div class="slide-counter">06 / 07</div>
-    </div>
-    <div class="signal-bar" style="--progress:85%"></div>
-    <div class="slide-body">
-      <div class="tag">DECENTRALISED SYSTEM</div>
-      <div class="slide-title">THE <span class="accent">P2P NETWORK</span></div>
-      <div class="slide-sub">// remove need for a server</div>
-      <div class="deploy-box">
-        <div class="deploy-label">HOW IT WORKS</div>
-        <div class="deploy-text">End-to-end typesafe. Zero cloud dependency. WebRTC for direct peer connections. IndexedDB for local persistence when peers go offline.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SLIDE 7 -->
-  <div class="slide" id="slide-6">
-    <div class="nav-bar">
-      <div class="logo">GRID<span>DOWN</span></div>
-      <div class="ticker"><span>TRANSMISSION COMPLETE // ALL SYSTEMS GO // MESH STABLE //</span></div>
-      <div class="slide-counter">07 / 07</div>
-    </div>
-    <div class="signal-bar" style="--progress:100%"></div>
-    <div class="slide-body" style="justify-content:center;align-items:center;text-align:center">
-      <div class="tag" style="border:none;justify-content:center">TRANSMISSION COMPLETE</div>
-      <div class="big-stat" data-glitch="GRIDDOWN">GRID<span style="color:#fff">DOWN</span></div>
-      <div style="font-size:14px;color:#52525b;letter-spacing:4px;margin-bottom:36px;animation:fadeUp 0.5s ease 0.35s both">WHEN EVERYTHING FAILS — PEOPLE DON'T</div>
-      <a href="http://localhost:3000" target="_blank">
-        <div class="cta-box">
-          <div class="cta-title">LIVE <span style="color:#dc2626">DEMO</span></div>
+    <div class="dbox"><div class="dlbl">WHY THIS STACK</div><div class="dtxt">End-to-end typesafe. WebRTC for direct P2P. IndexedDB for offline persistence.</div></div>`},
+      {
+        p: '100%', t: 'TRANSMISSION COMPLETE // ALL SYSTEMS GO // MESH STABLE //',
+        h: `<div style="display:flex;flex-direction:column;align-items:center;text-align:center">
+      <div class="tag" style="border:none;align-self:center">TRANSMISSION COMPLETE</div>
+      <div class="bigstat">GRID<span style="color:#fff">DOWN</span></div>
+      <div style="font-size:12px;color:#52525b;letter-spacing:4px;margin-bottom:22px">WHEN EVERYTHING FAILS — PEOPLE DON'T</div>
+            <a href="http://localhost:3000" target="_blank">
+        <div class="ctabox" style="width:100%;max-width:400px">
+          <div class="ctatitle">LIVE <span style="color:#dc2626">DEMO</span></div>
         </div>
       </a>
-    </div>
-  </div>
+    </div>`}
+    ];
 
-  <div class="nav-controls">
-    <button class="nav-btn" id="prev-btn" disabled onclick="changeSlide(-1)">← PREV</button>
-    <div class="dot-row" id="dots"></div>
-    <button class="nav-btn" id="next-btn" onclick="changeSlide(1)">NEXT →</button>
-  </div>
-</div>
+    const LABELS = ['INTRO', 'PROBLEM', 'HOW IT WORKS', 'FEATURES', 'TECH STACK', 'FINALE'];
 
-<div class="hint">F FULLSCREEN &nbsp;·&nbsp; ← → NAVIGATE &nbsp;·&nbsp; SPACE ADVANCE</div>
+    // ─── THREE.JS ────────────────────────────────────────────────────────────────
+    const canvas = document.getElementById('c');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 1);
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-<script>
-  let cur = 0;
-  const total = 7;
-  const dotsEl = document.getElementById('dots');
-  const flash = document.getElementById('flash');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 5.8;
 
-  for (let i = 0; i < total; i++) {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i === 0 ? ' active' : '');
-    d.onclick = () => goTo(i);
-    dotsEl.appendChild(d);
-  }
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
 
-  function triggerFlash() {
-    flash.classList.remove('go');
-    void flash.offsetWidth;
-    flash.classList.add('go');
-  }
+    // Lights
+    const pl = new THREE.PointLight(0xdc2626, 5, 12);
+    pl.position.set(0, 0, 4);
+    scene.add(pl);
 
-  function goTo(n) {
-    if (n === cur || n < 0 || n >= total) return;
-    triggerFlash();
-    setTimeout(() => {
-      document.getElementById('slide-' + cur).classList.remove('active');
-      document.querySelectorAll('.dot')[cur].classList.remove('active');
-      cur = n;
-      document.getElementById('slide-' + cur).classList.add('active');
-      document.querySelectorAll('.dot')[cur].classList.add('active');
-      document.getElementById('prev-btn').disabled = cur === 0;
-      document.getElementById('next-btn').disabled = cur === total - 1;
-    }, 90);
-  }
+    // ── Sphere group
+    const group = new THREE.Group();
+    scene.add(group);
 
-  function changeSlide(dir) { goTo(cur + dir); }
+    // ── WIREFRAME SPHERE — LineSegments2 with thicker lines
+    const icoGeo = new THREE.IcosahedronGeometry(1.5, 1);
+    const edgesGeo = new THREE.EdgesGeometry(icoGeo);
+    const lineSegGeo = new THREE.LineSegmentsGeometry().fromEdgesGeometry(edgesGeo);
+    // Increased linewidth from 3 → 7 for visibly thicker edges
+    const wireMat = new THREE.LineMaterial({ color: 0xdc2626, linewidth: 7, transparent: true, opacity: 0.85, resolution: new THREE.Vector2(window.innerWidth, window.innerHeight) });
+    const wireSphere = new THREE.LineSegments2(lineSegGeo, wireMat);
+    group.add(wireSphere);
+    window.addEventListener('resize', () => wireMat.resolution.set(window.innerWidth, window.innerHeight));
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight' || e.key === ' ') changeSlide(1);
-    if (e.key === 'ArrowLeft') changeSlide(-1);
-    if (e.key === 'f' || e.key === 'F') {
-      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-      else document.exitFullscreen();
+    // Particles
+    const pCount = 300;
+    const pPos = new Float32Array(pCount * 3);
+    for (let i = 0; i < pCount; i++) {
+      const r = 2.8 + Math.random() * 2.5;
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(2 * Math.random() - 1);
+      pPos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+      pPos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
+      pPos[i * 3 + 2] = r * Math.cos(ph);
     }
-  });
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xdc2626, size: 0.012, transparent: true, opacity: 0.35 })));
 
+    // ── Nodes on icosahedron vertices ──
+    const icoLow = new THREE.IcosahedronGeometry(1.54, 1);
+    const posAttr = icoLow.getAttribute('position');
+    const vertMap = new Map();
+    for (let i = 0; i < posAttr.count; i++) {
+      const x = parseFloat(posAttr.getX(i).toFixed(3));
+      const y = parseFloat(posAttr.getY(i).toFixed(3));
+      const z = parseFloat(posAttr.getZ(i).toFixed(3));
+      const key = `${x},${y},${z}`;
+      if (!vertMap.has(key)) vertMap.set(key, new THREE.Vector3(x, y, z));
+    }
+    const allVerts = [...vertMap.values()];
 
-</script>
+    function spreadPick(verts, n) {
+      const picked = [verts[0].clone()];
+      while (picked.length < n) {
+        let best = null, bd = -1;
+        for (const v of verts) {
+          const md = Math.min(...picked.map(p => p.distanceTo(v)));
+          if (md > bd) { bd = md; best = v.clone(); }
+        }
+        picked.push(best);
+      }
+      return picked;
+    }
+    const nodePos = spreadPick(allVerts, 7);
+
+    // Node meshes
+    const nodeGeo = new THREE.SphereGeometry(0.055, 16, 16);
+    const nodes = nodePos.map((pos, i) => {
+      const mat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
+      const m = new THREE.Mesh(nodeGeo, mat);
+      m.position.copy(pos);
+      m.userData = { i, pos: pos.clone() };
+      group.add(m);
+      return m;
+    });
+
+    // Connection lines between close nodes
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xdc2626, transparent: true, opacity: 0.12 });
+    for (let i = 0; i < nodePos.length; i++) {
+      for (let j = i + 1; j < nodePos.length; j++) {
+        if (nodePos[i].distanceTo(nodePos[j]) < 2.2) {
+          const g = new THREE.BufferGeometry().setFromPoints([nodePos[i], nodePos[j]]);
+          group.add(new THREE.Line(g, lineMat));
+        }
+      }
+    }
+
+    // ─── STATE ───────────────────────────────────────────────────────────────────
+    let cur = 0, panelOpen = false, rotating = false;
+    const autoSpeed = 0.004;
+
+    // Raycaster
+    const ray = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const tip = document.getElementById('tip');
+
+    canvas.addEventListener('mousemove', e => {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      ray.setFromCamera(mouse, camera);
+      const hits = ray.intersectObjects(nodes);
+      if (hits.length) {
+        const idx = hits[0].object.userData.i;
+        tip.style.opacity = '1';
+        tip.style.left = e.clientX + 'px';
+        tip.style.top = e.clientY + 'px';
+        tip.textContent = LABELS[idx];
+        canvas.style.cursor = 'pointer';
+      } else {
+        tip.style.opacity = '0';
+        canvas.style.cursor = 'default';
+      }
+    });
+    canvas.addEventListener('click', e => {
+      ray.setFromCamera(mouse, camera);
+      const hits = ray.intersectObjects(nodes);
+      if (hits.length) go(hits[0].object.userData.i);
+    });
+
+    // ─── PANEL ───────────────────────────────────────────────────────────────────
+    const panel = document.getElementById('panel');
+    const sc = document.getElementById('sc');
+    const sbar = document.getElementById('sbar');
+    const flashEl = document.getElementById('flash');
+
+    function flash() {
+      flashEl.classList.remove('go');
+      void flashEl.offsetWidth;
+      flashEl.classList.add('go');
+    }
+
+    function nodeScreen(idx) {
+      const wp = new THREE.Vector3();
+      nodes[idx].getWorldPosition(wp);
+      const v = wp.clone().project(camera);
+      return {
+        x: (v.x * 0.5 + 0.5) * window.innerWidth,
+        y: (-v.y * 0.5 + 0.5) * window.innerHeight
+      };
+    }
+
+    function openPanel(origin, slideIndex) {
+      const W = Math.min(window.innerWidth * 0.74, 960);
+      const H = Math.min(window.innerHeight * 0.78, 720);
+      const L = (window.innerWidth - W) / 2;
+      const T = (window.innerHeight - H) / 2 + 20;
+
+      // Clear content and hide it BEFORE the panel starts expanding
+      sc.classList.remove('visible');
+      sc.innerHTML = '';
+
+      Object.assign(panel.style, {
+        left: origin.x + 'px', top: origin.y + 'px',
+        width: '4px', height: '4px',
+        borderRadius: '50%',
+        opacity: '1',
+        transition: 'none',
+      });
+
+      panel.getBoundingClientRect();
+
+      Object.assign(panel.style, {
+        transition: 'left 0.6s cubic-bezier(0.16,1,0.3,1), top 0.6s cubic-bezier(0.16,1,0.3,1), width 0.6s cubic-bezier(0.16,1,0.3,1), height 0.6s cubic-bezier(0.16,1,0.3,1), border-radius 0.6s ease',
+        left: L + 'px', top: T + 'px',
+        width: W + 'px', height: H + 'px',
+        borderRadius: '2px',
+      });
+
+      // Wait for expand to finish, THEN inject content and reveal
+      setTimeout(() => {
+        sc.innerHTML = SLIDES[slideIndex].h;
+        panel.classList.add('open', 'anim');
+        sbar.style.setProperty('--p', SLIDES[slideIndex].p);
+        sbar.classList.add('on');
+        // Small extra tick so browser paints the new HTML before fading in
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            sc.classList.add('visible');
+          });
+        });
+        setTimeout(() => panel.classList.remove('anim'), 1400);
+      }, 640);
+
+      panelOpen = true;
+    }
+
+    function closePanel(cb) {
+      sbar.classList.remove('on');
+      panel.classList.remove('open', 'anim');
+      sc.classList.remove('visible');
+      const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+      Object.assign(panel.style, {
+        transition: 'all 0.35s cubic-bezier(0.4,0,1,1)',
+        left: cx + 'px', top: cy + 'px',
+        width: '0', height: '0',
+        borderRadius: '50%',
+        opacity: '0',
+      });
+      panelOpen = false;
+      setTimeout(cb || function () { }, 380);
+    }
+
+    // ─── ROTATION ────────────────────────────────────────────────────────────────
+    function rotateToNode(idx) {
+      const localDir = nodePos[idx].clone().normalize();
+      const target = new THREE.Vector3(0, 0, 1);
+      const q = new THREE.Quaternion().setFromUnitVectors(localDir, target);
+      rotating = true;
+      group.userData.rotTarget = q.clone();
+    }
+
+    // ─── NAVIGATION ──────────────────────────────────────────────────────────────
+    function highlightNode(idx) {
+      nodes.forEach((n, i) => {
+        const active = i === idx;
+        n.material.color.setHex(active ? 0xff5533 : 0xdc2626);
+        n.scale.setScalar(active ? 2.2 : 1);
+      });
+    }
+
+    function updateUI() {
+      document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === cur));
+      document.getElementById('pb').disabled = cur === 0;
+      document.getElementById('nb').disabled = cur === SLIDES.length - 1;
+      document.getElementById('counter').textContent = String(cur + 1).padStart(2, '0') + ' / 0' + SLIDES.length;
+      document.getElementById('ticker').textContent = SLIDES[cur].t;
+    }
+
+    function go(n) {
+      if (n < 0 || n >= SLIDES.length) return;
+      flash();
+
+      const doIt = () => {
+        cur = n;
+        updateUI();
+        highlightNode(n);
+        rotateToNode(n);
+        // Delay panel so the globe rotation is visible first
+        setTimeout(() => {
+          const origin = nodeScreen(n);
+          openPanel(origin, n);
+        }, 600);
+      };
+
+      if (panelOpen) {
+        closePanel(doIt);
+      } else {
+        doIt();
+      }
+    }
+
+    // Dots
+    const dotsEl = document.getElementById('dots');
+    for (let i = 0; i < SLIDES.length; i++) {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === 0 ? ' on' : '');
+      d.onclick = () => go(i);
+      dotsEl.appendChild(d);
+    }
+
+    // ─── ANIMATION LOOP ──────────────────────────────────────────────────────────
+    const clock = new THREE.Clock();
+
+    (function animate() {
+      requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+
+      if (rotating && group.userData.rotTarget) {
+        group.quaternion.slerp(group.userData.rotTarget, 0.03);
+        if (group.quaternion.angleTo(group.userData.rotTarget) < 0.008) rotating = false;
+      } else {
+        group.rotation.y += autoSpeed;
+        group.rotation.x = Math.sin(t * 0.15) * 0.06;
+      }
+
+      wireMat.opacity = 0.45 + Math.sin(t * 5) * 0.08;
+
+      nodes.forEach((n, i) => {
+        if (i !== cur) {
+          const s = 0.9 + Math.sin(t * 2.5 + i * 1.8) * 0.15;
+          n.scale.setScalar(s);
+        } else {
+          const s = 2.0 + Math.sin(t * 4) * 0.3;
+          n.scale.setScalar(s);
+        }
+      });
+
+      pl.intensity = 4 + Math.sin(t * 2.2) * 1.5;
+
+      renderer.render(scene, camera);
+    })();
+
+    // ─── INIT ─────────────────────────────────────────────────────────────────────
+    highlightNode(0);
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === ' ') go(cur + 1);
+      else if (e.key === 'ArrowLeft') go(cur - 1);
+      else if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+      }
+      else if (e.key === 'Escape' && panelOpen) closePanel();
+    });
+  </script>
 </body>
+
 </html>
