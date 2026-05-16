@@ -158,8 +158,9 @@
     .slide-counter{font-size:12px;color:#dc2626;letter-spacing:3px}
 
     /* Animated data ticker in nav */
-    .ticker{font-size:10px;color:#3f3f46;letter-spacing:2px;overflow:hidden;max-width:300px;white-space:nowrap}
-    .ticker span{display:inline-block;animation:dataStream 3s ease infinite}
+    .ticker{font-size:10px;color:#3f3f46;letter-spacing:2px;overflow:hidden;flex:1;white-space:nowrap;margin:0 30rem}
+    .ticker span{display:inline-block;animation:tickerScroll 12s linear infinite}
+    @keyframes tickerScroll{from{transform:translateX(100%)}to{transform:translateX(-100%)}}
 
     .signal-bar{height:2px;flex-shrink:0;background:#1a1a1a;position:relative;overflow:hidden}
     .signal-bar::after{content:'';position:absolute;top:0;left:0;height:100%;background:linear-gradient(90deg,#7f1d1d,#dc2626,#ff4444);width:0}
@@ -367,9 +368,10 @@
       border:2px solid #dc2626;padding:32px 48px;text-align:center;
       margin-top:24px;position:relative;transition:transform 0.3s
     }
+    a {text-decoration: none; color: white;}
     .cta-box::before{content:'// SYSTEM ONLINE';position:absolute;top:-11px;left:24px;font-size:10px;background:#000;padding:0 10px;color:#dc2626;letter-spacing:3px}
     .cta-box:hover{transform:scale(1.01)}
-    .cta-title{font-size:26px;letter-spacing:6px;margin-bottom:8px}
+    .cta-title{font-size:26px;letter-spacing:6px;margin-bottom:8px;text-decoration: none;}
     .cta-sub{font-size:12px;color:#52525b;letter-spacing:3px}
     #slide-6.active .cta-box{animation:fadeUp 0.5s ease 0.45s both,ctaPulse 2s ease 1.5s infinite}
     #slide-6.active .big-stat::before{animation:glitch 4s steps(1) 1.5s infinite}
@@ -430,7 +432,6 @@
       <div class="slide-sub">// P2P MESH NETWORK FOR COMMUNITY SURVIVAL</div>
       <div class="stat-row">
         <div class="stat-box red">
-          <div class="corner tl"></div><div class="corner br"></div>
           <div class="stat-num">72H</div><div class="stat-label">CRITICAL WINDOW</div>
         </div>
         <div class="stat-box amber">
@@ -622,10 +623,11 @@
       <div class="tag" style="border:none;justify-content:center">TRANSMISSION COMPLETE</div>
       <div class="big-stat" data-glitch="GRIDDOWN">GRID<span style="color:#fff">DOWN</span></div>
       <div style="font-size:14px;color:#52525b;letter-spacing:4px;margin-bottom:36px;animation:fadeUp 0.5s ease 0.35s both">WHEN EVERYTHING FAILS — PEOPLE DON'T</div>
-      <div class="cta-box">
-        <div class="cta-title">LIVE <span style="color:#dc2626">DEMO</span></div>
-        <div class="cta-sub">// SCAN TO CONNECT TO THE MESH</div>
-      </div>
+      <a href="http://localhost:3000" target="_blank">
+        <div class="cta-box">
+          <div class="cta-title">LIVE <span style="color:#dc2626">DEMO</span></div>
+        </div>
+      </a>
     </div>
   </div>
 
@@ -682,11 +684,7 @@
     }
   });
 
-  // Animated ticker loop
-  document.querySelectorAll('.ticker span').forEach(el => {
-    el.style.animationDuration = (3 + Math.random() * 2) + 's';
-    el.style.animationDelay = (Math.random() * 2) + 's';
-  });
+
 </script>
 </body>
 </html>
