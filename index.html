@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GRIDDOWN — Emergency Coordination System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: #000;
+      color: #fff;
+      font-family: 'Share Tech Mono', monospace;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .pres {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+      background: #000;
+      position: relative;
+    }
+
+    .slide {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .slide.active { display: flex; }
+
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #dc2626;
+      background: #000;
+      padding: 16px 40px;
+      flex-shrink: 0;
+    }
+
+    .logo { font-size: 36px; color: #dc2626; letter-spacing: 6px; }
+    .logo span { color: #fff; }
+
+    .slide-counter { font-size: 13px; color: #dc2626; letter-spacing: 3px; }
+
+    .signal-bar {
+      height: 2px;
+      flex-shrink: 0;
+      background: #27272a;
+      position: relative;
+    }
+    .signal-bar::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; height: 100%;
+      background: #dc2626;
+      width: var(--progress, 0%);
+      transition: width 0.4s ease;
+    }
+
+    .slide-body {
+      flex: 1;
+      padding: 48px 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .tag {
+      font-size: 12px;
+      color: #dc2626;
+      letter-spacing: 4px;
+      margin-bottom: 14px;
+      border-left: 3px solid #dc2626;
+      padding-left: 12px;
+    }
+
+    .slide-title {
+      font-size: clamp(32px, 5vw, 56px);
+      letter-spacing: 4px;
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+
+    .slide-title .accent { color: #dc2626; }
+
+    .slide-sub {
+      font-size: 14px;
+      color: #71717a;
+      letter-spacing: 3px;
+      margin-bottom: 36px;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .stat-box {
+      border: 1px solid #27272a;
+      padding: 24px 20px;
+      position: relative;
+    }
+
+    .stat-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+    }
+
+    .stat-box.red::before { background: #dc2626; }
+    .stat-box.amber::before { background: #d97706; }
+    .stat-box.green::before { background: #16a34a; }
+
+    .stat-num { font-size: clamp(32px, 4vw, 48px); margin-bottom: 6px; }
+    .stat-box.red .stat-num { color: #dc2626; }
+    .stat-box.amber .stat-num { color: #d97706; }
+    .stat-box.green .stat-num { color: #16a34a; }
+    .stat-label { font-size: 12px; color: #71717a; letter-spacing: 3px; }
+
+    .problem-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+
+    .problem-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px 20px;
+      border: 1px solid #27272a;
+      border-left: 3px solid #dc2626;
+    }
+
+    .problem-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .problem-text { font-size: 14px; line-height: 1.6; color: #d4d4d8; letter-spacing: 1px; }
+    .problem-text strong { color: #fff; }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .feature-card {
+      border: 1px solid #27272a;
+      padding: 24px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: #dc2626;
+      opacity: 0.4;
+    }
+
+    .feature-icon { font-size: 28px; color: #dc2626; margin-bottom: 12px; }
+    .feature-name { font-size: 14px; letter-spacing: 3px; margin-bottom: 8px; color: #fff; }
+    .feature-desc { font-size: 12px; color: #71717a; letter-spacing: 1px; line-height: 1.6; }
+
+    .flow-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 24px;
+      flex-wrap: nowrap;
+    }
+
+    .flow-step {
+      border: 1px solid #dc2626;
+      padding: 14px 10px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #fff;
+      flex: 1;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .flow-step span { color: #71717a; font-size: 10px; display: block; margin-top: 4px; }
+    .flow-arrow { color: #dc2626; font-size: 20px; flex-shrink: 0; }
+
+    .tech-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .tech-pill {
+      border: 1px solid #3f3f46;
+      padding: 14px 10px;
+      text-align: center;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: #d4d4d8;
+    }
+
+    .tech-role { font-size: 10px; color: #dc2626; letter-spacing: 1px; margin-top: 6px; }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .team-card {
+      border: 1px solid #27272a;
+      padding: 32px 20px;
+      text-align: center;
+    }
+
+    .team-avatar {
+      width: 56px; height: 56px;
+      border: 2px solid #dc2626;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      color: #dc2626;
+      margin: 0 auto 14px;
+    }
+
+    .team-name { font-size: 14px; letter-spacing: 3px; color: #fff; margin-bottom: 6px; }
+    .team-role { font-size: 11px; color: #71717a; letter-spacing: 2px; }
+
+    .cta-box {
+      border: 2px solid #dc2626;
+      padding: 36px 48px;
+      text-align: center;
+      margin-top: 28px;
+      position: relative;
+    }
+
+    .cta-box::before {
+      content: '// SYSTEM ONLINE';
+      position: absolute;
+      top: -11px; left: 24px;
+      font-size: 11px;
+      background: #000;
+      padding: 0 10px;
+      color: #dc2626;
+      letter-spacing: 3px;
+    }
+
+    .cta-title { font-size: 28px; letter-spacing: 6px; margin-bottom: 10px; }
+    .cta-sub { font-size: 13px; color: #71717a; letter-spacing: 3px; }
+
+    .big-stat { font-size: clamp(48px, 8vw, 80px); color: #dc2626; letter-spacing: 6px; margin-bottom: 8px; }
+
+    .deploy-box {
+      margin-top: 24px;
+      border: 1px solid #27272a;
+      padding: 18px 24px;
+      border-left: 3px solid #16a34a;
+    }
+
+    .deploy-label { font-size: 11px; color: #16a34a; letter-spacing: 3px; margin-bottom: 8px; }
+    .deploy-text { font-size: 13px; color: #d4d4d8; letter-spacing: 1px; line-height: 1.6; }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 16px;
+      border-top: 1px solid #27272a;
+      background: #000;
+      flex-shrink: 0;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid #3f3f46;
+      color: #fff;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 3px;
+      padding: 10px 28px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .nav-btn:hover:not(:disabled) { border-color: #dc2626; color: #dc2626; }
+    .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+    .dot-row { display: flex; gap: 8px; align-items: center; }
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #3f3f46;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .dot.active { background: #dc2626; }
+
+    .fullscreen-hint {
+      position: fixed;
+      bottom: 80px; right: 24px;
+      font-size: 10px;
+      color: #3f3f46;
+      letter-spacing: 2px;
+      pointer-events: none;
+    }
+
+    .scanline {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<div class="pres" id="pres">
+
+  <!-- SLIDE 1: TITLE -->
+  <div class="slide active" id="slide-0">
+    <div class="nav-bar">
+      <div class="logo">GRID<span>DOWN</span></div>
+      <div class="slide-counter">01 / 07</div>
+    </div>
+    <div class="signal-bar" style="--progress: 14%"></div>
+    <div class="slide-body">
+      <div class="tag">EMERGENCY COORDINATION SYSTEM</div>
+      <div class="slide-title">WHEN THE <span class="accent">GRID</span><br>GOES DARK</div>
+      <div class="slide-sub">// P2P MESH NETWORK FOR COMMUNITY SURVIVAL</div>
+      <div class="stat-row">
+        <div class="stat-box red">
+          <div class="stat-num">72H</div>
+          <div class="stat-label">CRITICAL WINDOW</div>
+        </div>
+        <div class="stat-box amber">
+          <div class="stat-num">0</div>
+          <div class="stat-label">CENTRAL SERVERS</div>
+        </div>
+        <div class="stat-box green">
+          <div class="stat-num">∞</div>
+          <div class="stat-label">PEER CONNECTIONS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: PROBLEM -->
+  <div class="slide" id="slide-1">
+    <div class="nav-bar">
+      <div class="logo">GRID<span>DOWN</span></div>
+      <div class="slide-counter">02 / 07</div>
+    </div>
+    <div class="signal-bar" style="--progress: 28%"></div>
+    <div class="slide-body">
+      <div class="tag">THREAT ASSESSMENT</div>
+      <div class="slide-title">THE <span class="accent">PROBLEM</span></div>
+      <div class="slide-sub">// SOLAR FLARE X9.3 — ALL SYSTEMS OFFLINE</div>
+      <ul class="problem-list">
+        <li class="problem-item">
+          <i class="ti ti-id-off problem-icon" style="color:#dc2626" aria-hidden="true"></i>
+          <div class="problem-text"><strong>IDENTITY WITHOUT RECORDS</strong> — databases wiped, no proof of who you are</div>
+        </li>
+        <li class="problem-item">
+          <i class="ti ti-shield-off problem-icon" style="color:#d97706" aria-hidden="true"></i>
+          <div class="problem-text"><strong>TRUST WITHOUT AUTHORITY</strong> — no institutions to verify credentials</div>
+        </li>
+        <li class="problem-item">
+          <i class="ti ti-world-off problem-icon" style="color:#dc2626" aria-hidden="true"></i>
+          <div class="problem-text"><strong>COORDINATION WITHOUT INFRASTRUCTURE</strong> — who needs help, who can help?</div>
+        </li>
+        <li class="problem-item">
+          <i class="ti ti-clock-off problem-icon" style="color:#d97706" aria-hidden="true"></i>
+          <div class="problem-text"><strong>72 HOURS</strong> — the critical window before communities collapse without coordination</div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: HOW IT WORKS -->
+  <div class="slide" id="slide-2">
+    <div class="nav-bar">
+      <div class="logo">GRID<span>DOWN</span></div>
+      <div class="slide-counter">03 / 07</div>
+    </div>
+    <div class="signal-bar" style="--progress: 42%"></div>
+    <div class="slide-body">
+      <div class="tag">SOLUTION OVERVIEW</div>
+      <div class="slide-title">HOW <span class="accent">GRIDDOWN</span><br>WORKS</div>
+      <div class="slide-sub">// NO INTERNET. NO SERVERS. JUST PEOPLE.</div>
+      <div class="flow-row">
+        <div class="flow-step">JOIN MESH<span>HOTSPOT / LAN</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">ANNOUNCE<span>SKILLS + ZONE</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">POST TASK<span>NEED / OFFER</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">P2P CHAT<span>DIRECT LINK</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">ATTEST<span>BUILD TRUST</span></div>
+      </div>
+      <div class="deploy-box" style="margin-top: 32px;">
+        <div class="deploy-label">DEPLOYMENT MODEL</div>
+        <div class="deploy-text">One laptop + WiFi hotspot = community coordination hub. Anyone can run the tower. Zero cloud dependency. Works entirely on local network.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: FEATURES -->
+  <div class="slide" id="slide-3">
+    <div class="nav-bar">
+      <div class="logo">GRID<span>DOWN</span></div>
+      <div class="slide-counter">04 / 07</div>
+    </div>
+    <div class="signal-bar" style="--progress: 57%"></div>
+    <div class="slide-body">
+      <div class="tag">FEATURE SET</div>
+      <div class="slide-title">KEY <span class="accent">MODULES</span></div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <i class="ti ti-radio feature-icon" aria-hidden="true"></i>
+          <div class="feature-name">BROADCAST ALERTS</div>
+          <div class="feature-desc">Blast urgent messages to all peers simultaneously. No server needed. Red / amber / green urgency levels.</div>
+        </div>
+        <div class="feature-card">
+          <i class="ti ti-list-check feature-icon" aria-hidden="true"></i>
+          <div class="feature-name">URGENCY BOARD</div>
+          <div class="feature-desc">Live feed of needs and offers from all connected peers. Claim a task to open a direct P2P chat.</div>
+        </div>
+        <div class="feature-card">
+          <i class="ti ti-users feature-icon" aria-hidden="true"></i>
+          <div class="feature-name">SKILL DISCOVERY</div>
+          <div class="feature-desc">Search connected peers by skill. Medical, engineering, farming, mechanics and more.</div>
+        </div>
+        <div class="feature-card">
+          <i class="ti ti-certificate feature-icon" aria-hidden="true"></i>
+          <div class="feature-name">TRUST ATTESTATION</div>
+          <div class="feature-desc">After completing a task, peers mutually sign off. Identity emerges from interactions — not records.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: TECH STACK -->
+  <div class="slide" id="slide-4">
+    <div class="nav-bar">
+      <div class="logo">GRID<span>DOWN</span></div>
+      <div class="slide-counter">05 / 07</div>
+    </div>
+    <div class="signal-bar" style="--progress: 71%"></div>
+    <div class="slide-body">
+      <div class="tag">ARCHITECTURE</div>
+      <div class="slide-title">TECH <span class="accent">STACK</span></div>
+      <div class="slide-sub">// SERVERLESS BY DESIGN</div>
+      <div class="tech-row">
+        <div class="tech-pill">NEXT.JS 15<div class="tech-role">FRAMEWORK</div></div>
+        <div class="tech-pill">TRPC v11<div class="tech-role">API LAYER</div></div>
+        <div class="tech-pill">WEBRTC<div class="tech-role">P2P MESH</div></div>
+        <div class="tech-pill">TAILWIND 4<div class="tech-role">STYLING</div></div>
+        <div class="tech-pill">TYPESCRIPT<div class="tech-role">LANGUAGE</div></div>
+        <div class="tech-pill">ZOD<div class="tech-role">VALIDATION</div></div>
+        <div class="tech-pill">REACT 19<div class="tech-role">UI</div></div>
+        <div class="tech-pill">INDEXEDDB<div class="tech-role">LOCAL STORE</div></div>
+      </div>
+      <div class="deploy-box">
+        <div class="deploy-label">WHY THIS STACK</div>
+        <div class="deploy-text">End-to-end typesafe. Zero cloud dependency. WebRTC for direct peer connections. IndexedDB for local persistence when peers go offline.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: TEAM -->
+  <div class="slide" id="slide-5">
+    <div class="nav-bar">
+      <div class="logo">GRID<span>DOWN</span></div>
+      <div class="slide-counter">06 / 07</div>
+    </div>
+    <div class="signal-bar" style="--progress: 85%"></div>
+    <div class="slide-body">
+      <div class="tag">TEAM</div>
+      <div class="slide-title">THE <span class="accent">OPERATORS</span></div>
+      <div class="slide-sub">// HACKATHON UNIT — BLACKOUT DIVISION</div>
+      <div class="team-grid">
+        <div class="team-card">
+          <div class="team-avatar"><i class="ti ti-code" aria-hidden="true"></i></div>
+          <div class="team-name">MEMBER 01</div>
+          <div class="team-role">FULLSTACK</div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar"><i class="ti ti-wifi" aria-hidden="true"></i></div>
+          <div class="team-name">MEMBER 02</div>
+          <div class="team-role">P2P / NETWORKING</div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar"><i class="ti ti-layout" aria-hidden="true"></i></div>
+          <div class="team-name">MEMBER 03</div>
+          <div class="team-role">UI / DESIGN</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: FINALE -->
+  <div class="slide" id="slide-6">
+    <div class="nav-bar">
+      <div class="logo">GRID<span>DOWN</span></div>
+      <div class="slide-counter">07 / 07</div>
+    </div>
+    <div class="signal-bar" style="--progress: 100%"></div>
+    <div class="slide-body" style="justify-content: center; align-items: center; text-align: center;">
+      <div class="tag" style="border: none; text-align: center; justify-content: center;">TRANSMISSION COMPLETE</div>
+      <div class="big-stat">GRID<span style="color:#fff">DOWN</span></div>
+      <div style="font-size: 15px; color: #71717a; letter-spacing: 4px; margin-bottom: 40px;">WHEN EVERYTHING FAILS — PEOPLE DON'T</div>
+      <div class="cta-box">
+        <div class="cta-title">LIVE <span style="color:#dc2626">DEMO</span></div>
+        <div class="cta-sub">// SCAN TO CONNECT TO THE MESH</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-controls">
+    <button class="nav-btn" id="prev-btn" disabled onclick="changeSlide(-1)">← PREV</button>
+    <div class="dot-row" id="dots"></div>
+    <button class="nav-btn" id="next-btn" onclick="changeSlide(1)">NEXT →</button>
+  </div>
+</div>
+
+<div class="fullscreen-hint">F11 FOR FULLSCREEN // ← → TO NAVIGATE</div>
+
+<script>
+  let current = 0;
+  const total = 7;
+  const dots = document.getElementById('dots');
+
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dots.appendChild(d);
+  }
+
+  function goTo(n) {
+    document.getElementById('slide-' + current).classList.remove('active');
+    document.querySelectorAll('.dot')[current].classList.remove('active');
+    current = n;
+    document.getElementById('slide-' + current).classList.add('active');
+    document.querySelectorAll('.dot')[current].classList.add('active');
+    document.getElementById('prev-btn').disabled = current === 0;
+    document.getElementById('next-btn').disabled = current === total - 1;
+  }
+
+  function changeSlide(dir) {
+    goTo(Math.max(0, Math.min(total - 1, current + dir)));
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') changeSlide(1);
+    if (e.key === 'ArrowLeft') changeSlide(-1);
+    if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+  });
+</script>
+</body>
+</html>
