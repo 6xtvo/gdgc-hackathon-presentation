@@ -152,15 +152,17 @@
     .ticker-wrap {
       flex: 1;
       overflow: hidden;
-      white-space: nowrap
+      white-space: nowrap;
+      margin-left: 20vw;
+      margin-right: 20vw;
     }
 
     .ticker {
       display: inline-block;
       font-size: 10px;
-      color: #3f3f46;
+      color: #c7c7ce;
       letter-spacing: 2px;
-      animation: tickscroll 16s linear infinite
+      animation: tickscroll 16s linear infinite;
     }
 
     @keyframes tickscroll {
@@ -278,7 +280,6 @@
       pointer-events: all
     }
 
-    /* Content hidden during expand, shown only after ready */
     #sc {
       opacity: 0;
       transition: opacity 0.25s ease
@@ -321,7 +322,6 @@
       min-height: 0
     }
 
-    /* Content styles */
     @keyframes fadeup {
       from {
         opacity: 0;
@@ -1133,10 +1133,9 @@
     <div class="hud-top">
       <div class="logo">GRID<span>DOWN</span></div>
       <div class="ticker-wrap">
-        <div class="ticker" id="ticker">SIGNAL ACQUIRED // ENCRYPTION ACTIVE // MESH ONLINE // PEERS CONNECTING //
-          NODES: 247 //</div>
+        <div class="ticker" id="ticker">SIGNAL ACQUIRED // ENCRYPTION ACTIVE // MESH ONLINE // PEERS CONNECTING</div>
       </div>
-      <div class="counter" id="counter">01 / 07</div>
+      <div class="counter" id="counter">01 / 05</div>
     </div>
     <div class="hud-bot">
       <button class="nbtn" id="pb" disabled onclick="go(cur-1)">← PREV</button>
@@ -1160,69 +1159,73 @@
     // ─── SLIDES ─────────────────────────────────────────────────────────────────
     const SLIDES = [
       {
-        p: '14%', t: 'SIGNAL ACQUIRED // ENCRYPTION ACTIVE // MESH ONLINE // PEERS CONNECTING //',
+        p: '14%', t: 'SIGNAL ACQUIRED // ENCRYPTION ACTIVE // MESH ONLINE // PEERS CONNECTING',
         h: `<div class="tag">EMERGENCY COORDINATION SYSTEM</div>
     <div class="stitle">WHEN THE <span class="acc">GRID</span><br>GOES DARK</div>
     <div class="ssub">// P2P MESH NETWORK FOR COMMUNITY SURVIVAL</div>
     <div class="stat-row">
-      <div class="stat-box r"><div class="snum">72H</div><div class="slbl">CRITICAL WINDOW</div></div>
+      <div class="stat-box r"><div class="snum">28H</div><div class="slbl">CRITICAL WINDOW</div></div>
       <div class="stat-box a"><div class="snum">0</div><div class="slbl">CENTRAL SERVERS</div></div>
       <div class="stat-box g"><div class="snum">∞</div><div class="slbl">PEER CONNECTIONS</div></div>
-    </div>`},
+    </div>`
+      },
       {
-        p: '42%', t: 'MESH TOPOLOGY ACTIVE // ROUTING PACKETS // NODES: 247 // LATENCY: 12MS //',
-        h: `<div class="tag">SOLUTION OVERVIEW</div>
-    <div class="stitle">HOW <span class="acc">GRIDDOWN</span> WORKS</div>
-    <div class="ssub">// NO INTERNET. NO SERVERS. JUST PEOPLE.</div>
-    <div class="flow">
-      <div class="fstep">JOIN MESH<span>HOTSPOT/LAN</span></div><div class="farr">→</div>
-      <div class="fstep">ANNOUNCE<span>SKILLS+ZONE</span></div><div class="farr">→</div>
-      <div class="fstep">POST TASK<span>NEED/OFFER</span></div><div class="farr">→</div>
-      <div class="fstep">P2P CHAT<span>DIRECT LINK</span></div><div class="farr">→</div>
-      <div class="fstep">ATTEST<span>BUILD TRUST</span></div>
-    </div>
-    <div class="dbox"><div class="dlbl">DEPLOYMENT MODEL</div><div class="dtxt">One laptop + WiFi hotspot = community hub. Anyone runs the tower. Zero cloud dependency.</div></div>`},
-      {
-        p: '57%', t: 'MODULES LOADED // BROADCAST READY // TRUST ENGINE: ONLINE //',
+        p: '57%', t: 'MODULES LOADED // BROADCAST READY // TRUST ENGINE: ONLINE',
         h: `<div class="tag">FEATURE SET</div>
     <div class="stitle">KEY <span class="acc">MODULES</span></div>
     <div class="fgrid">
       <div class="fcard"><i class="ti ti-radio ficon"></i><div class="fname">BROADCAST ALERTS</div><div class="fdesc">Blast urgent messages to all peers. Red / amber / green urgency levels.</div></div>
-      <div class="fcard"><i class="ti ti-list-check ficon"></i><div class="fname">URGENCY BOARD</div><div class="fdesc">Live feed of needs and offers. Claim a task to open a direct P2P chat.</div></div>
-      <div class="fcard"><i class="ti ti-users ficon"></i><div class="fname">SKILL DISCOVERY</div><div class="fdesc">Search connected peers by skill — medical, engineering, farming and more.</div></div>
-      <div class="fcard"><i class="ti ti-certificate ficon"></i><div class="fname">TRUST ATTESTATION</div><div class="fdesc">Peers sign off on tasks. Identity emerges from interactions, not records.</div></div>
-    </div>`},
+      <div class="fcard"><i class="ti ti-list-check ficon"></i><div class="fname">URGENCY BOARD</div><div class="fdesc">Live feed of needs and offers. Upvote, downvote, or claim a task to open a direct P2P chat.</div></div>
+      <div class="fcard"><i class="ti ti-users ficon"></i><div class="fname">DISCOVERY MAP</div><div class="fdesc">Pinpoints nearby tasks and offers relative to your location, mapping out the closest offline path to reach them.</div></div>
+      <div class="fcard"><i class="ti ti-certificate ficon"></i><div class="fname">TRUST ATTESTATION</div><div class="fdesc">Peers upvote or downvote on tasks. Identity emerges from interactions, not records.</div></div>
+    </div>`
+      },
       {
-        p: '71%', t: 'STACK VERIFIED // BUILD: PASSING // TYPES: SAFE // DEPLOY: READY //',
+        h: `<div class="tag">SOLUTION OVERVIEW</div>
+            <div class="stitle">HOW <span class="acc">GRIDDOWN</span> WORKS. <span class="acc">P2P</span>.</div>
+            <div class="ssub">// SERVERLESS. LOCAL CACHE. BROWSER TO BROWSER.</div>
+            <div class="flow">
+              <div class="fstep">LOAD & CACHE<span>LOCAL BROWSER</span></div><div class="farr">→</div>
+              <div class="fstep">BROADCAST<span>POST TO BOARD</span></div><div class="farr">→</div>
+              <div class="fstep">MAP SYNC<span>GEOLOCATE</span></div><div class="farr">→</div>
+              <div class="fstep">VOTE / MOD<span>UP+DOWNVOTE</span></div><div class="farr">→</div>
+              <div class="fstep">P2P CHAT<span>DIRECT LINK</span></div>
+            </div>
+<div class="dbox">
+  <div class="dlbl">DISTRIBUTED ARCHITECTURE</div>
+  <div class="dtxt">Zero central servers. Apps run entirely out of device cache, syncing a live community board and interactive map directly over P2P. Public consensus is maintained locally via peer upvotes and downvotes.</div>
+</div>`},
+      {
+        p: '71%', t: 'STACK VERIFIED // BUILD: PASSING // TYPES: SAFE // DEPLOY: READY',
         h: `<div class="tag">ARCHITECTURE</div>
     <div class="stitle">TECH <span class="acc">STACK</span></div>
     <div class="ssub">// SERVERLESS BY DESIGN</div>
     <div class="trow">
-      <div class="tpill">NEXT.JS 15<div class="trole">FRAMEWORK</div></div>
-      <div class="tpill">TRPC v11<div class="trole">API LAYER</div></div>
+      <div class="tpill">NEXT.JS/REACT<div class="trole">FRAMEWORK</div></div>
+      <div class="tpill">TRPC<div class="trole">API LAYER</div></div>
       <div class="tpill">WEBRTC<div class="trole">P2P MESH</div></div>
-      <div class="tpill">TAILWIND 4<div class="trole">STYLING</div></div>
+      <div class="tpill">TAILWIND<div class="trole">STYLING</div></div>
       <div class="tpill">TYPESCRIPT<div class="trole">LANGUAGE</div></div>
-      <div class="tpill">ZOD<div class="trole">VALIDATION</div></div>
-      <div class="tpill">REACT 19<div class="trole">UI</div></div>
-      <div class="tpill">INDEXEDDB<div class="trole">LOCAL STORE</div></div>
+      <div class="tpill">LOCAL STORAGE<div class="trole">DATA STORE</div></div>
     </div>
-    <div class="dbox"><div class="dlbl">WHY THIS STACK</div><div class="dtxt">End-to-end typesafe. WebRTC for direct P2P. IndexedDB for offline persistence.</div></div>`},
+    <div class="dbox"><div class="dlbl">WHY THIS STACK</div><div class="dtxt">End-to-end typesafe. WebRTC for direct P2P. Local storage for offline persistence.</div></div>`
+      },
       {
-        p: '100%', t: 'TRANSMISSION COMPLETE // ALL SYSTEMS GO // MESH STABLE //',
+        p: '100%', t: 'TRANSMISSION COMPLETE // ALL SYSTEMS GO // MESH STABLE',
         h: `<div style="display:flex;flex-direction:column;align-items:center;text-align:center">
       <div class="tag" style="border:none;align-self:center">TRANSMISSION COMPLETE</div>
       <div class="bigstat">GRID<span style="color:#fff">DOWN</span></div>
       <div style="font-size:12px;color:#52525b;letter-spacing:4px;margin-bottom:22px">WHEN EVERYTHING FAILS — PEOPLE DON'T</div>
-            <a href="http://localhost:3000" target="_blank">
-        <div class="ctabox" style="width:100%;max-width:400px">
+      <a href="http://localhost:3000" target="_blank" style="width:100%;max-width:400px">
+        <div class="ctabox">
           <div class="ctatitle">LIVE <span style="color:#dc2626">DEMO</span></div>
         </div>
       </a>
-    </div>`}
+    </div>`
+      }
     ];
 
-    const LABELS = ['INTRO', 'PROBLEM', 'HOW IT WORKS', 'FEATURES', 'TECH STACK', 'FINALE'];
+    const LABELS = ['INTRO', 'HOW IT WORKS', 'FEATURES', 'TECH STACK', 'FINALE'];
 
     // ─── THREE.JS ────────────────────────────────────────────────────────────────
     const canvas = document.getElementById('c');
@@ -1241,26 +1244,21 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // Lights
     const pl = new THREE.PointLight(0xdc2626, 5, 12);
     pl.position.set(0, 0, 4);
     scene.add(pl);
 
-    // ── Sphere group
     const group = new THREE.Group();
     scene.add(group);
 
-    // ── WIREFRAME SPHERE — LineSegments2 with thicker lines
     const icoGeo = new THREE.IcosahedronGeometry(1.5, 1);
     const edgesGeo = new THREE.EdgesGeometry(icoGeo);
     const lineSegGeo = new THREE.LineSegmentsGeometry().fromEdgesGeometry(edgesGeo);
-    // Increased linewidth from 3 → 7 for visibly thicker edges
     const wireMat = new THREE.LineMaterial({ color: 0xdc2626, linewidth: 7, transparent: true, opacity: 0.85, resolution: new THREE.Vector2(window.innerWidth, window.innerHeight) });
     const wireSphere = new THREE.LineSegments2(lineSegGeo, wireMat);
     group.add(wireSphere);
     window.addEventListener('resize', () => wireMat.resolution.set(window.innerWidth, window.innerHeight));
 
-    // Particles
     const pCount = 300;
     const pPos = new Float32Array(pCount * 3);
     for (let i = 0; i < pCount; i++) {
@@ -1275,7 +1273,6 @@
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
     scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xdc2626, size: 0.012, transparent: true, opacity: 0.35 })));
 
-    // ── Nodes on icosahedron vertices ──
     const icoLow = new THREE.IcosahedronGeometry(1.54, 1);
     const posAttr = icoLow.getAttribute('position');
     const vertMap = new Map();
@@ -1300,9 +1297,8 @@
       }
       return picked;
     }
-    const nodePos = spreadPick(allVerts, 7);
+    const nodePos = spreadPick(allVerts, SLIDES.length);
 
-    // Node meshes
     const nodeGeo = new THREE.SphereGeometry(0.055, 16, 16);
     const nodes = nodePos.map((pos, i) => {
       const mat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
@@ -1313,7 +1309,6 @@
       return m;
     });
 
-    // Connection lines between close nodes
     const lineMat = new THREE.LineBasicMaterial({ color: 0xdc2626, transparent: true, opacity: 0.12 });
     for (let i = 0; i < nodePos.length; i++) {
       for (let j = i + 1; j < nodePos.length; j++) {
@@ -1328,7 +1323,6 @@
     let cur = 0, panelOpen = false, rotating = false;
     const autoSpeed = 0.004;
 
-    // Raycaster
     const ray = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     const tip = document.getElementById('tip');
@@ -1350,6 +1344,7 @@
         canvas.style.cursor = 'default';
       }
     });
+
     canvas.addEventListener('click', e => {
       ray.setFromCamera(mouse, camera);
       const hits = ray.intersectObjects(nodes);
@@ -1384,7 +1379,6 @@
       const L = (window.innerWidth - W) / 2;
       const T = (window.innerHeight - H) / 2 + 20;
 
-      // Clear content and hide it BEFORE the panel starts expanding
       sc.classList.remove('visible');
       sc.innerHTML = '';
 
@@ -1405,13 +1399,11 @@
         borderRadius: '2px',
       });
 
-      // Wait for expand to finish, THEN inject content and reveal
       setTimeout(() => {
         sc.innerHTML = SLIDES[slideIndex].h;
         panel.classList.add('open', 'anim');
         sbar.style.setProperty('--p', SLIDES[slideIndex].p);
         sbar.classList.add('on');
-        // Small extra tick so browser paints the new HTML before fading in
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             sc.classList.add('visible');
@@ -1474,7 +1466,6 @@
         updateUI();
         highlightNode(n);
         rotateToNode(n);
-        // Delay panel so the globe rotation is visible first
         setTimeout(() => {
           const origin = nodeScreen(n);
           openPanel(origin, n);
@@ -1529,8 +1520,9 @@
       renderer.render(scene, camera);
     })();
 
-    // ─── INIT ─────────────────────────────────────────────────────────────────────
-    highlightNode(0);
+    // ─── INIT ────────────────────────────────────────────────────────────────────
+    // Small delay so the globe renders first before opening slide 0
+    setTimeout(() => go(0), 300);
 
     document.addEventListener('keydown', e => {
       if (e.key === 'ArrowRight' || e.key === ' ') go(cur + 1);
